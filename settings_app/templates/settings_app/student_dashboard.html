@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Welcome, {{ student.user.first_name }}!</h2>
+
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4>Available Exams for Your Batch: {{ student.batch.name }}</h4>
+        </div>
+        <div class="card-body">
+            {% if exams %}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Title</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exam in exams %}
+                                <tr>
+                                    <td>{{ exam.title }}</td>
+                                    <td>{{ exam.start_time|date:"M d, Y H:i" }}</td>
+                                    <td>{{ exam.end_time|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        {% if exam.id in submitted_exam_ids %}
+                                            <span class="badge bg-success">Submitted</span>
+                                        {% elif now < exam.start_time %}
+                                            <span class="badge bg-warning text-dark">Not Started</span>
+                                        {% elif now > exam.end_time %}
+                                            <span class="badge bg-secondary">Closed</span>
+                                        {% else %}
+                                            <span class="badge bg-info text-white">Ongoing</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if exam.id not in submitted_exam_ids and now >= exam.start_time and now <= exam.end_time %}
+                                            <a href="{% url 'take_exam' exam.id %}" class="btn btn-sm btn-success">Take Exam</a>
+                                        {% elif exam.id in submitted_exam_ids %}
+                                            <span class="text-muted">Already Submitted</span>
+                                        {% else %}
+                                            <span class="text-muted">Unavailable</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted text-center">No exams scheduled for your batch yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Faculty Dashboard</h2>
+
+    <!-- Welcome Message -->
+    <div class="alert alert-info text-center">
+        Welcome, <strong>{{ user.first_name }} {{ user.last_name }}</strong>! You can add monthly reviews for your assigned batches.
+    </div>
+
+    <!-- List of Batches Assigned to Faculty -->
+    <div class="card shadow-lg p-3 mb-5 bg-white rounded">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Your Assigned Batches</h4>
+        </div>
+        <div class="card-body">
+            {% if batches %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Batch Name</th>
+                                <th>Course</th>
+                                <th>Branch</th>
+                                <th>Actions</th>
+                                <!-- <th>Mark Attendance by Uploading Class Photo</th> -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for batch in batches %}
+                                <tr>
+                                    <td>{{ batch.name }}</td>
+                                    <td>{{ batch.course.name }}</td>
+                                    <td>{{ batch.branch.name }}</td>
+                                     <td>
+                                        <!-- Exam Options -->
+                                         {% comment %} 
+
+                                        <!-- <a href="{% url 'create_exam' %}?batch_id={{ batch.id }}" class="btn btn-success btn-sm mb-1">Monthly Review</a>
+                                        <a href="{% url 'list_exams_by_batch' batch.id %}" class="btn btn-info btn-sm mb-1">View Exams</a> -->
+                                        {% endcomment %}
+                                        <a href="{% url 'create_monthly_review' batch.id %}" class="btn btn-success btn-sm mb-1">Monthly Review</a>
+
+                                    </td>
+                                    
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-center text-muted">You have no assigned batches.</p>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Optional: Exam Summary Panel -->
+    {% if exams %}
+    <div class="card shadow-lg mb-5">
+        <div class="card-header bg-secondary text-white">
+            <h4 class="mb-0">Your Recently Created Exams</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Batch</th>
+                        <th>Start</th>
+                        <th>End</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exam in exams %}
+                    <tr>
+                        <td>{{ exam.title }}</td>
+                        <td>{{ exam.batch.name }}</td>
+                        <td>{{ exam.start_time }}</td>
+                        <td>{{ exam.end_time }}</td>
+                        <td>
+                            <a href="{% url 'add_questions' exam.id %}" class="btn btn-outline-primary btn-sm">Add Questions</a>
+                            <a href="{% url 'faculty_exam_results' exam.id %}" class="btn btn-outline-dark btn-sm">View Results</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

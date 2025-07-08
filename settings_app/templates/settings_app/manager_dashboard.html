@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Manager Dashboard</h2>
+    
+    <div class="row">
+        <!-- Manage Course -->
+        <div class="col-md-4">
+            <div class="card shadow-lg">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Manage Courses</h5>
+                    <p class="card-text">Add, Edit or Delete Courses</p>
+                    <a href="{% url 'course_list' %}" class="btn btn-primary btn-block">Go to Courses</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage Branch -->
+        <div class="col-md-4">
+            <div class="card shadow-lg">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Manage Branches</h5>
+                    <p class="card-text">Add, Edit or Delete Branches</p>
+                    <a href="{% url 'branch_list' %}" class="btn btn-success btn-block">Go to Branches</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage Batch -->
+        <div class="col-md-4">
+            <div class="card shadow-lg">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Manage Batches</h5>
+                    <p class="card-text">View and assign Faculty to Batches</p>
+                    <a href="{% url 'batch_list' %}" class="btn btn-warning btn-block">Go to Batches</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <!-- Manage Faculty -->
+        <div class="col-md-4">
+            <div class="card shadow-lg">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Manage Faculty</h5>
+                    <p class="card-text">Add and assign Faculty to Courses & Batches</p>
+                    <a href="{% url 'faculty_list' %}" class="btn btn-info btn-block">Go to Faculty</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage Students -->
+        <!-- <div class="col-md-4">
+            <div class="card shadow-lg">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Manage Students</h5>
+                    <p class="card-text">Enroll students into Batches</p>
+                    <a href="#" class="btn btn-danger btn-block">Go to Students</a>
+                </div>
+            </div>
+        </div> -->
+
+        
+    </div>
+</div>
+{% endblock %}

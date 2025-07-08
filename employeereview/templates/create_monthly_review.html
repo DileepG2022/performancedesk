@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <h3 class="text-center mb-4">Monthly Review for {{ batch.name }}</h3>
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <label>Trainer Name</label>
+        <input type="text" class="form-control" value="{{ faculty.user.get_full_name }}" readonly>
+      </div>
+      <div class="col-md-6">
+        <label>Batch</label>
+        <input type="text" class="form-control" value="{{ batch.name }}" readonly>
+      </div>
+    </div>
+
+    <div class="row mb-3">
+  <div class="col-md-6">
+    <label>Start Date</label>
+    <input type="date" class="form-control" name="start_date" value="{{ batch.start_date|date:'Y-m-d' }}" required>
+  </div>
+  <div class="col-md-6">
+    <label>End Date</label>
+    <input type="date" class="form-control" name="end_date" value="{{ batch.end_date|date:'Y-m-d' }}" required>
+  </div>
+</div>
+
+
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <label>Total Students</label>
+        <input type="number" class="form-control" name="total_students" required>
+      </div>
+      <div class="col-md-6">
+        <label>Review Month</label>
+        <select class="form-select" name="review_month" required>
+          {% for month in months %}
+            <option value="{{ month }}">{{ month }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!-- Metrics Grid -->
+    <h5 class="mb-3">Metrics</h5>
+    <div class="table-responsive mb-4">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for metric in metrics %}
+            <tr>
+              <td>{{ metric.metric_name }}</td>
+              <td>
+                <input type="text" name="metric_{{ metric.metric_name }}" class="form-control" required>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Activities Grid -->
+    <h5 class="mb-3">Milestone Activities</h5>
+    <div class="table-responsive mb-4">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Activity</th>
+            <th>Day</th>
+            <th>Planned Date</th>
+            <th>Completed Date</th>
+            <th>Status</th>
+            <th>Participation</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for activity in activities %}
+            <tr>
+              <td>{{ activity.activity }}</td>
+              <td>{{ activity.day }}</td>
+              <td><input type="date" name="planned_date_{{ forloop.counter0 }}" class="form-control"></td>
+              <td><input type="date" name="completed_date_{{ forloop.counter0 }}" class="form-control"></td>
+              <td>
+                <select name="status_{{ forloop.counter0 }}" class="form-select">
+                  <option value="Pending">Pending</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </td>
+              <td><input type="text" name="participation_{{ forloop.counter0 }}" class="form-control"></td>
+              <td><input type="text" name="remarks_{{ forloop.counter0 }}" class="form-control"></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="text-center">
+      <button type="submit" class="btn btn-primary">Submit Review</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

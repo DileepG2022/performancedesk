@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Batch List</h2>
+    
+    <a href="{% url 'add_batch' %}" class="btn btn-primary mb-3">Add New Batch</a>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Branch</th>
+                    <th>Course</th>
+                    <th>Faculty</th>
+                    <th>Start Date</th>   
+                    <th>End Date</th>
+                    <th>Completed</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for batch in batches %}
+                <tr>
+                    <td>{{ batch.name }}</td>
+                    <td>{{ batch.branch.name }}</td>
+                    <td>{{ batch.course.name }}</td>
+                    <td>{{ batch.faculty.user.username }}</td>
+                    <td>
+                        {% if batch.start_date %}
+                            {{ batch.start_date|date:"Y-m-d" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if batch.end_date %}
+                            {{ batch.end_date|date:"Y-m-d" }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ batch.completed|yesno:"Yes,No" }}</td>
+                    <td>
+                        <a href="{% url 'edit_batch' batch.id %}" class="btn btn-warning btn-sm">Edit</a>
+                        <a href="{% url 'delete_batch' batch.id %}" class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No batches available.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

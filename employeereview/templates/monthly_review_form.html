@@ -1,0 +1,134 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Monthly Trainer Review</title>
+  <style>
+    table, th, td { border: 1px solid #ccc; border-collapse: collapse; padding: 8px; }
+    th { background-color: #4CAF50; color: white; }
+  </style>
+</head>
+<body>
+  <h2>Monthly Trainer Review Form</h2>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <h3>Batch Information</h3>
+    {{ review_form.as_p }}
+
+    <h3>Monthly Metrics</h3>
+    <table>
+      <tr>
+        <th>Metric Name</th>
+        <th>Value</th>
+      </tr>
+      {{ metric_formset.management_form }}
+      {% for form in metric_formset %}
+        <tr>
+          <td>{{ form.metric_name }}</td>
+          <td>{{ form.metric_value }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+
+    <h3>Milestone Activities</h3>
+    <table>
+      <tr>
+        <th>Activity</th>
+        <th>Day</th>
+        <th>Planned Date</th>
+        <th>Completed Date</th>
+        <th>Status</th>
+        <th>Participation</th>
+        <th>Remarks</th>
+      </tr>
+      {{ activity_formset.management_form }}
+      {% for form in activity_formset %}
+        <tr>
+          <td>{{ form.activity }}</td>
+          <td>{{ form.day }}</td>
+          <td>{{ form.planned_date }}</td>
+          <td>{{ form.completed_date }}</td>
+          <td>{{ form.status }}</td>
+          <td>{{ form.participation }}</td>
+          <td>{{ form.remarks }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+
+    <button type="submit">Submit</button>
+  </form>
+</body>
+</html>
+
+
+<!-- {% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Monthly Trainer Review</title>
+  <style>
+    table, th, td { border: 1px solid #ccc; border-collapse: collapse; padding: 8px; }
+    th { background-color: #4CAF50; color: white; }
+    input[readonly] { background-color: #eee; border: none; }
+  </style>
+</head>
+<body>
+  <h2>Monthly Trainer Review Form</h2>
+
+  <form method="post">
+  {% csrf_token %}
+  <h3>Review Details</h3>
+  {{ review_form.as_p }}
+
+  <h3>Metrics</h3>
+  {{ metric_formset.management_form }}
+  {% for form in metric_formset %}
+    <div class="row mb-2">
+      <div class="col-md-4">
+        <input type="text" value="{{ form.initial.metric_name }}" readonly class="form-control">
+        {{ form.metric_name.as_hidden }}
+      </div>
+      <div class="col-md-4">
+        {{ form.metric_value }}
+      </div>
+    </div>
+  {% endfor %}
+
+  <h3>Activities</h3>
+  {{ activity_formset.management_form }}
+  {% for form in activity_formset %}
+    <div class="row mb-2">
+      <div class="col-md-3">
+        <input type="text" value="{{ form.initial.activity }}" readonly class="form-control">
+        {{ form.activity.as_hidden }}
+      </div>
+      <div class="col-md-2">
+        <input type="text" value="{{ form.initial.day }}" readonly class="form-control">
+        {{ form.day.as_hidden }}
+      </div>
+      <div class="col-md-2">
+        {{ form.planned_date }}
+      </div>
+      <div class="col-md-2">
+        {{ form.completed_date }}
+      </div>
+      <div class="col-md-2">
+        {{ form.status }}
+      </div>
+      <div class="col-md-3">
+        {{ form.participation }}
+      </div>
+      <div class="col-md-3">
+        {{ form.remarks }}
+      </div>
+    </div>
+  {% endfor %}
+
+  <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+
+</body>
+</html>
+ -->

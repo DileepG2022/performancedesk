@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Review System</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .content-container {
+            margin-top: 80px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container">
+            {% if user.is_authenticated %}
+    {% if user.groups.first.name == "Manager" %}
+        <a class="navbar-brand" href="{% url 'manager_dashboard' %}">Employee Review System</a>
+    {% elif user.groups.first.name == "Faculty" %}
+        <a class="navbar-brand" href="{% url 'faculty_dashboard' %}">Employee Review System</a>
+    {% elif user.groups.first.name == "Student" %}
+        <a class="navbar-brand" href="{% url 'student_dashboard' %}">Employee Review System</a>
+    {% else %}
+        <a class="navbar-brand" href="#">Employee Review System</a>
+    {% endif %}
+{% else %}
+    <a class="navbar-brand" href="#">Employee Review System</a>
+{% endif %}
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <span class="nav-link text-white">Welcome, {{ user.username }}</span>
+                        </li>
+                        
+                        <li class="nav-item">
+                            <!-- <a class="nav-link text-white" href="{% url 'logout' %}">Logout</a> -->
+                            <form action="{% url 'logout' %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Logout</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-light text-primary mx-2" href="{% url 'login' %}">Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container content-container">
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+</html>
