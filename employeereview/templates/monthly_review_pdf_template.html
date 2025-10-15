@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; }
+        h2, h4 { margin-bottom: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #000; padding: 5px; text-align: left; }
+    </style>
+</head>
+<body>
+    <h2>Trainer Monthly Review Report</h2>
+    <p><strong>Trainer:</strong> {{ review.user.user.get_full_name }}</p>
+    <p><strong>Batch:</strong> {{ review.batch.name }}</p>
+    <p><strong>Review Month:</strong> {{ review.review_month }}</p>
+    <p><strong>Total Students:</strong> {{ review.total_students }}</p>
+    <p><strong>Start Date:</strong> {{ review.start_date }} | <strong>End Date:</strong> {{ review.end_date }}</p>
+
+    <h4>Metrics</h4>
+    <table>
+        <thead>
+            <tr><th>Metric</th><th>Value</th></tr>
+        </thead>
+        <tbody>
+            {% for metric in metrics %}
+                <tr><td>{{ metric.metric_name }}</td><td>{{ metric.metric_value }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h4>Milestone Activities</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Activity</th><th>Day</th><th>Planned Date</th>
+                <th>Completed Date</th><th>Status</th><th>Participation</th><th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for act in activities %}
+                <tr>
+                    <td>{{ act.activity }}</td>
+                    <td>{{ act.day }}</td>
+                    <td>{{ act.planned_date }}</td>
+                    <td>{{ act.completed_date }}</td>
+                    <td>{{ act.status }}</td>
+                    <td>{{ act.participation }}</td>
+                    <td>{{ act.remarks }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

@@ -1,0 +1,75 @@
+{% load custom_filters %}
+<div class="card shadow-lg border-0 rounded-4">
+    <div class="card-header bg-dark text-white rounded-top-4">
+        <h5 class="mb-0">All Months Report - {{ batch.name }}</h5>
+        <small>Trainer: {{ batch.faculty.user.get_full_name }}</small>
+    </div>
+    <div class="card-body">
+        <!-- Batch Info -->
+        <div class="row mb-3">
+            <div class="col-md-3"><strong>Start Date:</strong> {{ batch.start_date|date:"F d, Y" }}</div>
+            <div class="col-md-3"><strong>End Date:</strong> {{ batch.end_date|date:"F d, Y" }}</div>
+            <div class="col-md-3"><strong>Total Students:</strong> {{ batch.studentprofile_set.count }}</div>
+        </div>
+
+        {% for review_id, data in all_data.items %}
+            <div class="mb-5">
+                <h6 class="fw-bold">Review Month: {{ data.review.review_date|date:"F Y" }}</h6>
+
+                <!-- Metrics -->
+                <ul class="list-group mb-3">
+                    {% for metric in data.metrics %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ metric.metric.metric_name }}
+                            <span class="badge bg-primary rounded-pill">{{ metric.metric_value }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                <!-- Remarks -->
+                <p><strong>Remarks:</strong> {{ data.review.remarks|default:"-" }}</p>
+
+                <!-- Activities Table -->
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover text-center">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Student</th>
+                                {% for act in batch_activities %}
+                                    <th>
+                                        {{ act.activity }}<br>
+                                        <small class="text-secondary">Planned: {{ act.planned_date|date:"d M Y" }}</small>
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                                <tr class="{% cycle 'table-light' 'table-white' %}">
+                                    <td class="text-start">{{ student.user.get_full_name }}</td>
+                                    {% for act in batch_activities %}
+                                        {% with data.completion_map|get_item:student.id as student_activities %}
+                                            {% with student_activities|get_item:act.id as completed_date %}
+                                                <td>
+                                                    {% if completed_date %}
+                                                        {% if completed_date > act.planned_date %}
+                                                            <span class="text-danger fw-bold">{{ completed_date|date:"d M Y" }}</span>
+                                                        {% else %}
+                                                            {{ completed_date|date:"d M Y" }}
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <span class="text-secondary">-</span>
+                                                    {% endif %}
+                                                </td>
+                                            {% endwith %}
+                                        {% endwith %}
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>

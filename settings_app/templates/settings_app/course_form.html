@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+    <h2>{% if form.instance.pk %}Edit Course{% else %}Add Course{% endif %}</h2>
+    <!-- Display Messages -->
+    {% if messages %}
+    <div class="alert-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            {{ form.as_p }}
+        </div>
+
+        <h4>Milestone Activities (Sorted by Day)</h4>
+        <table class="table table-bordered" id="milestone-table">
+            <thead>
+                <tr>
+                    <th>Activity</th>
+                    <th>Day</th>
+                    <th>Active</th>
+                    <th>Delete</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{ formset.management_form }}
+                {% for form in formset %}
+                <tr class="form-row">
+    {% for hidden in form.hidden_fields %}
+        {{ hidden }}
+    {% endfor %}
+    {% for field in form.visible_fields %}
+        <td>{{ field }}</td>
+    {% endfor %}
+    <td><button type="button" class="btn btn-danger remove-row">🗑️</button></td>
+</tr>
+
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <button type="button" id="add-activity" class="btn btn-outline-success mb-3">➕ Add Activity</button>
+        <br>
+        <button type="submit" class="btn btn-primary">💾 Save</button>
+        
+
+        <a href="{% url 'course_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+
+<script>
+    const addBtn = document.getElementById("add-activity");
+    const tableBody = document.querySelector("#milestone-table tbody");
+    const totalForms = document.querySelector("#id_coursemilestoneactivity_set-TOTAL_FORMS");
+
+    addBtn.addEventListener("click", function () {
+        const formCount = parseInt(totalForms.value);
+        const templateRow = document.querySelector(".form-row");
+        const newRow = templateRow.cloneNode(true);
+        const regex = new RegExp(`coursemilestoneactivity_set-(\\d+)-`, 'g');
+
+        newRow.innerHTML = newRow.innerHTML.replaceAll(regex, `coursemilestoneactivity_set-${formCount}-`);
+
+        [...newRow.querySelectorAll("input")].forEach(input => {
+            if (input.type === "checkbox") {
+                input.checked = false;
+            } else {
+                input.value = "";
+            }
+        });
+
+        tableBody.appendChild(newRow);
+        totalForms.value = formCount + 1;
+    });
+
+    tableBody.addEventListener("click", function (e) {
+        if (e.target && e.target.classList.contains("remove-row")) {
+            const row = e.target.closest("tr");
+            const deleteCheckbox = row.querySelector("input[type='checkbox'][name*='-DELETE']");
+            if (deleteCheckbox) {
+                deleteCheckbox.checked = true;
+                row.style.display = "none";
+            } else {
+                row.remove();
+                totalForms.value = parseInt(totalForms.value) - 1;
+            }
+        }
+    });
+</script>
+{% endblock %}

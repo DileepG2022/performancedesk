@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">All Months Sales Review Report</h2>
+
+    <form method="post" class="row g-3 mb-4">
+        {% csrf_token %}
+        <div class="col-md-6">
+            <label for="sales_member" class="form-label">Sales Team Member</label>
+            <select id="sales_member" name="sales_member" class="form-select" {% if disable_dropdown %} disabled {% endif %}>
+                <option value="">-- Select Sales Team Member --</option>
+                {% for member in sales_team %}
+                    <option value="{{ member.id }}" {% if selected_user and member.id == selected_user.id %}selected{% endif %}>
+                        {{ member.user.get_full_name|default:member.user.username }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-6 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">View All Months Report</button>
+        </div>
+    </form>
+
+    {% if reviews %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Month</th>
+                        <th>Year</th>
+                        <th>Metrics</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in reviews %}
+                        <tr>
+                            <td>{{ review.review_date|date:"F" }}</td>
+                            <td>{{ review.review_date|date:"Y" }}</td>
+                            <td>
+                                <table class="table table-sm table-bordered mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Metric</th>
+                                            <th>Value</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for metric in review.salesmonthlymetric_set.all %}
+                                            <tr>
+                                                <td>{{ metric.metric.metric_name }}</td>
+                                                <td>{{ metric.metric_value }}</td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr><td colspan="2" class="text-center">No Metrics Added</td></tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% elif selected_user %}
+        <p class="text-center text-muted">No reviews found for this member.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

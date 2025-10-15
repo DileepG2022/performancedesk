@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h3>Batch Activities: {{ batch.name }}</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Activity</th>
+                <th>Day</th>
+                <th>Planned Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for act in activities %}
+            <tr>
+                <td>{{ act.activity }}</td>
+                <td>{{ act.day }}</td>
+                <td>{{ act.planned_date }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center">No activities found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'batch_list' %}" class="btn btn-secondary">← Back to Batches</a>
+</div>
+{% endblock %}

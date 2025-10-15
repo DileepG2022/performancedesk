@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Manager Dashboard{% endblock %}
+
+{% block content %}
+<div class="text-center mb-5">
+  <h2 class="fw-bold text-primary">Manager Dashboard</h2>
+  <p class="text-muted">Quick access to manage courses, branches, batches, and reviews</p>
+</div>
+
+<div class="row g-4">
+  <div class="col-sm-6 col-lg-4">
+    <div class="card dashboard-card h-100 shadow-sm">
+      <div class="card-body text-center">
+        <i class="bi bi-journal-text fs-1 text-secondary"></i>
+        <h5 class="card-title mt-3">Trainer Review Summary</h5>
+        <p class="text-muted">View all reviews of trainers</p>
+        <a href="{% url 'all_month_reviews' %}" class="btn btn-outline-secondary w-100">View Reviews</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add more cards here (Sales Reports, Placement Reviews, etc.) -->
+</div>
+{% endblock %}

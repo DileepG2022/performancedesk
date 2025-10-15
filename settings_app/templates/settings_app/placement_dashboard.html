@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-5 text-primary fw-bold">Placement Dashboard</h2>
+
+    <div class="row g-4">
+        <!-- Add Monthly Review -->
+        <div class="col-md-4 col-sm-6">
+            <div class="card shadow-lg border-0 rounded-4 h-100 hover-scale">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-journal-plus text-primary mb-3" style="font-size: 2.5rem;"></i>
+                    <h5 class="card-title fw-bold">Add Monthly Review</h5>
+                    <p class="card-text text-muted">Submit your monthly placement performance review</p>
+                    <a href="{% url 'placement_add_monthly_review' %}" class="btn btn-primary rounded-pill px-4 mt-3">Add Review</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- View My Reviews -->
+        <div class="col-md-4 col-sm-6">
+            <div class="card shadow-lg border-0 rounded-4 h-100 hover-scale">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-eye-fill text-success mb-3" style="font-size: 2.5rem;"></i>
+                    <h5 class="card-title fw-bold">View My Reviews</h5>
+                    <p class="card-text text-muted">See all your submitted monthly placement reviews</p>
+                    <a href="{% url 'placement_all_months_review_report' %}" class="btn btn-success rounded-pill px-4 mt-3">View Reviews</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generate Monthly Review Report -->
+        <div class="col-md-4 col-sm-6">
+            <div class="card shadow-lg border-0 rounded-4 h-100 hover-scale">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-file-earmark-text-fill text-warning mb-3" style="font-size: 2.5rem;"></i>
+                    <h5 class="card-title fw-bold">Generate Review Report</h5>
+                    <p class="card-text text-muted">Select month to generate your placement review report</p>
+                    <a href="{% url 'placement_monthly_review_report' %}" class="btn btn-warning rounded-pill px-4 mt-3">Generate Report</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mt-5">
+        <!-- Placement Profile Info -->
+        <div class="col-lg-6 col-md-8 mx-auto">
+            <div class="card shadow-lg border-0 rounded-4 p-4">
+                <h5 class="card-title text-center fw-bold mb-4">My Profile</h5>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><strong>Name:</strong></span>
+                        <span>{{ request.user.get_full_name }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><strong>Branch:</strong></span>
+                        <span>{{ request.user.placement_user.branch.name }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><strong>Mobile:</strong></span>
+                        <span>{{ request.user.placement_user.mobile_no }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><strong>WhatsApp:</strong></span>
+                        <span>{{ request.user.placement_user.whatsapp_no }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Hover scale effect for cards */
+.hover-scale:hover {
+    transform: translateY(-5px) scale(1.02);
+    transition: all 0.3s ease-in-out;
+}
+
+/* Smooth card transitions */
+.card {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Responsive font scaling */
+@media (max-width: 576px) {
+    .card-body i {
+        font-size: 2rem !important;
+    }
+}
+</style>
+{% endblock %}

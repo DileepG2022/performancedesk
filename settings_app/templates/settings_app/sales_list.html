@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Manage Sales Staff</h2>
+
+    <form method="GET" class="mb-4">
+        <div class="row">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search by Name or Email" value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-4">
+                <select name="branch" class="form-control">
+                    <option value="">Filter by Branch</option>
+                    {% for branch in branches %}
+                    <option value="{{ branch.id }}" {% if request.GET.branch == branch.id|stringformat:"s" %}selected{% endif %}>
+                        {{ branch.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="{% url 'sales_list' %}" class="btn btn-secondary">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Name</th>
+                    <th>Branch</th>
+                    <th>Mobile</th>
+                    <th>WhatsApp</th>
+                    <th>Reporting Officers</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in sales %}
+                <tr>
+                    <td>{{ s.user.get_full_name }}</td>
+                    <td>{{ s.branch.name }}</td>
+                    <td>{{ s.mobile_no }}</td>
+                    <td>{{ s.whatsapp_no }}</td>
+                    <td>
+                        
+                        {% for ro in s.reporting_officers.all %}
+                            {{ ro.username }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>
+                        <a href="{% url 'edit_sales' s.id %}" class="btn btn-warning btn-sm">Edit</a>
+                        <a href="{% url 'delete_sales' s.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this sales staff?');">Delete</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No sales staff found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-center mt-4">
+        <a href="{% url 'add_sales' %}" class="btn btn-success">Add Sales Staff</a>
+    </div>
+</div>
+{% endblock %}

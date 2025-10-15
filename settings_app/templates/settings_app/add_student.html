@@ -1,58 +1,62 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Add Student</h2>
-    <!-- Display Messages -->
-    {% if messages %}
-    <div class="alert-container">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-    <form method="POST" enctype="multipart/form-data" class="border p-4 rounded bg-light">
+    <h2 class="text-center mb-4">Add New Student ({{ batch.name }})</h2>
+    <form method="post">
         {% csrf_token %}
-        <div class="mb-3">
-            <label>First Name</label>
-            {{ form.first_name }}
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label>First Name</label>
+                {{ form.first_name }}
+            </div>
+            <div class="col-md-6">
+                <label>Last Name</label>
+                {{ form.last_name }}
+            </div>
         </div>
-        <div class="mb-3">
-            <label>Last Name</label>
-            {{ form.last_name }}
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label>Username</label>
+                {{ form.username }}
+            </div>
+            <div class="col-md-6">
+                <label>Password</label>
+                {{ form.password }}
+            </div>
         </div>
-        <div class="mb-3">
-            <label>Username</label>
-            {{ form.username }}
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label>Mobile No</label>
+                {{ form.mobile_no }}
+            </div>
+            <div class="col-md-6">
+                <label>WhatsApp No</label>
+                {{ form.whatsapp_no }}
+            </div>
         </div>
-        <div class="mb-3">
-            <label>Password</label>
-            {{ form.password }}
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+            <label>Sales Person</label>
+            {{ form.sales_person }}
+            </div>
+            <div class="col-md-6">
+        <label>Admission Date</label>
+        {{ form.admission_date }}
+    </div>
         </div>
-        <div class="mb-3">
-            <label>Student ID</label>
-            {{ form.student_id }}
+
+        
+
+
+        <div class="mb-3 form-check">
+            {{ form.drop_out }} <label class="form-check-label">Drop Out</label>
         </div>
-        <div class="mb-3">
-            <label>Branch</label>
-            {{ form.branch }}
-        </div>
-        <div class="mb-3">
-            <label>Course</label>
-            {{ form.course }}
-        </div>
-        <div class="mb-3">
-            <label>Batch</label>
-            {{ form.batch }}
-        </div>
-        <div class="mb-3">
-            <label>Profile Photo</label>
-            {{ form.photo }}
-        </div>
-        <button type="submit" class="btn btn-success w-100">Add Student</button>
+
+        <button type="submit" class="btn btn-primary">Add Student</button>
+        <a href="{% url 'student_list' batch.id %}" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
 {% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-primary text-white rounded-top-4">
+            <h4 class="mb-0">All Months Batch Report</h4>
+        </div>
+        <div class="card-body">
+            <form id="allMonthsForm" class="row g-3">
+                <div class="col-md-6">
+                    
+                    <label class="form-label fw-bold">Select Trainer</label>
+                    <select id="trainer" class="form-select" required {% if selected_trainer %}disabled{% endif %}>
+    <option value="">--- Select Trainer ---</option>
+    {% for trainer in trainers %}
+        <option value="{{ trainer.id }}" {% if selected_trainer == trainer.id %}selected{% endif %}>
+            {{ trainer.user.get_full_name }}
+        </option>
+    {% endfor %}
+</select>
+
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Select Batch</label>
+                    <select id="batch" class="form-select" {% if selected_trainer %}{% else %}disabled{% endif %} required>
+    <option value="">--- Select Batch ---</option>
+    {% if batches %}
+        {% for b in batches %}
+            <option value="{{ b.id }}">{{ b.name }}</option>
+        {% endfor %}
+    {% endif %}
+</select>
+
+                </div>
+                <div class="col-12 text-center mt-3">
+                    <button type="submit" class="btn btn-success px-4 rounded-pill shadow-sm">View All Months Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="reportSection" class="mt-5"></div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const trainerSelect = document.getElementById("trainer");
+    const batchSelect = document.getElementById("batch");
+    const reportSection = document.getElementById("reportSection");
+
+    // Only attach change event if trainer dropdown is not disabled
+    if (!trainerSelect.disabled) {
+        trainerSelect.addEventListener("change", function () {
+            fetch(`/get-batches/?trainer_id=${this.value}`)
+                .then(res => res.json())
+                .then(data => {
+                    batchSelect.innerHTML = '<option value="">--- Select Batch ---</option>';
+                    data.forEach(b => batchSelect.innerHTML += `<option value="${b.id}">${b.name}</option>`);
+                    batchSelect.disabled = false;
+                });
+        });
+    }
+
+    document.getElementById("allMonthsForm").addEventListener("submit", function(e){
+        e.preventDefault();
+        fetch(`/view-all-months-report/?trainer_id=${trainerSelect.value}&batch_id=${batchSelect.value}`)
+            .then(res => res.text())
+            .then(html => reportSection.innerHTML = html);
+    });
+});
+
+</script>
+{% endblock %}

@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Page Title -->
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-primary">
+            <i class="bi bi-bar-chart-fill me-2"></i> Sales Dashboard
+        </h2>
+        <p class="text-muted">Manage your reviews, reports, targets & track performance</p>
+    </div>
+
+    <!-- Dashboard Cards -->
+    <div class="row g-4 mb-5">
+        <!-- Add Monthly Review -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-lg border-0 rounded-4 h-100 hover-card">
+                <div class="card-body text-center d-flex flex-column justify-content-between">
+                    <div>
+                        <i class="bi bi-journal-plus display-4 text-primary mb-3"></i>
+                        <h5 class="fw-bold">Add Monthly Review</h5>
+                        <p class="text-muted small">Submit your monthly performance review</p>
+                    </div>
+                    <a href="{% url 'sales_add_monthly_review' %}" class="btn btn-primary w-100 mt-3 rounded-pill">
+                        Add Review
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- View My Reviews -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-lg border-0 rounded-4 h-100 hover-card">
+                <div class="card-body text-center d-flex flex-column justify-content-between">
+                    <div>
+                        <i class="bi bi-clipboard-data display-4 text-success mb-3"></i>
+                        <h5 class="fw-bold">View My Reviews</h5>
+                        <p class="text-muted small">See all your submitted monthly reviews</p>
+                    </div>
+                    <a href="{% url 'sales_all_months_review_report' %}" class="btn btn-success w-100 mt-3 rounded-pill">
+                        View Reviews
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generate Monthly Review Report -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-lg border-0 rounded-4 h-100 hover-card">
+                <div class="card-body text-center d-flex flex-column justify-content-between">
+                    <div>
+                        <i class="bi bi-file-earmark-text display-4 text-warning mb-3"></i>
+                        <h5 class="fw-bold">Generate Review Report</h5>
+                        <p class="text-muted small">Select month to generate your review report</p>
+                    </div>
+                    <a href="{% url 'sales_monthly_review_report' %}" class="btn btn-warning w-100 mt-3 rounded-pill text-white">
+                        Generate Report
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manage Sales Targets (only visible if user is a reporting officer) -->
+        {% if request.user.sales_reporting_officers.exists %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-lg border-0 rounded-4 h-100 hover-card">
+                <div class="card-body text-center d-flex flex-column justify-content-between">
+                    <div>
+                        <i class="bi bi-flag display-4 text-info mb-3"></i>
+                        <h5 class="fw-bold">Manage Sales Targets</h5>
+                        <p class="text-muted small">Add, edit and view team sales targets</p>
+                    </div>
+                    <a href="{% url 'sales_target_list' %}" class="btn btn-info w-100 mt-3 rounded-pill text-white">
+                        Manage Targets
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Month-Year Dropdown for Analytics -->
+    <div class="row mb-4">
+        <div class="col-md-4 mx-auto">
+            <select id="monthYearSelect" class="form-select rounded-pill shadow-sm">
+    {% for item in months_years %}
+    <option value="{{ item.year }}-{{ item.month }}">
+        {{ item.display }}
+    </option>
+    {% endfor %}
+</select>
+
+        </div>
+    </div>
+
+    <!-- Analytics Charts -->
+    <div class="row g-4 mb-5">
+        <div class="col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body">
+                    <h5 class="text-center fw-bold">Leads vs Admissions</h5>
+                    <canvas id="leadsAdmissionsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body">
+                    <h5 class="text-center fw-bold">Fee Status</h5>
+                    <canvas id="feeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body">
+                    <h5 class="text-center fw-bold">Conversion & Dropouts</h5>
+                    <canvas id="conversionChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body">
+                    <h5 class="text-center fw-bold">Monthly Sales Target</h5>
+                    <canvas id="salesTargetChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Section -->
+    <div class="row mt-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-gradient text-white rounded-top-4" 
+                     style="background: linear-gradient(135deg, #4facfe, #00f2fe);">
+                    <h5 class="mb-0 text-center"><i class="bi bi-person-badge me-2"></i> My Profile</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row gy-2">
+                        <div class="col-md-6"><strong>Name:</strong> {{ request.user.get_full_name }}</div>
+                        <div class="col-md-6"><strong>Branch:</strong> {{ request.user.sales_user.branch.name }}</div>
+                        <div class="col-md-6"><strong>Mobile:</strong> {{ request.user.sales_user.mobile_no }}</div>
+                        <div class="col-md-6"><strong>WhatsApp:</strong> {{ request.user.sales_user.whatsapp_no }}</div>
+                        <div class="col-md-12">
+                            <strong>Reporting Officers:</strong> 
+                            {% for officer in request.user.sales_user.reporting_officers.all %}
+                                {{ officer.get_full_name }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                                None
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let leadsAdmissionsChart, feeChart, conversionChart, salesTargetChart;
+
+    function loadMetrics(year, month) {
+        fetch(`/sales/metrics/${year}/${month}/`)
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) return;
+
+                const m = data.metrics;
+                if (leadsAdmissionsChart) leadsAdmissionsChart.destroy();
+                if (feeChart) feeChart.destroy();
+                if (conversionChart) conversionChart.destroy();
+                if (salesTargetChart) salesTargetChart.destroy();
+
+                // Leads vs Admissions
+                leadsAdmissionsChart = new Chart(document.getElementById("leadsAdmissionsChart"), {
+                    type: "bar",
+                    data: {
+                        labels: ["Total Leads", "Total Admissions"],
+                        datasets: [{
+                            label: "Count",
+                            data: [m["Total Leads"] || 0, m["Total Admissions"] || 0],
+                            backgroundColor: ["#4facfe", "#43e97b"]
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+
+                // Fee Collected vs Pending
+                feeChart = new Chart(document.getElementById("feeChart"), {
+                    type: "doughnut",
+                    data: {
+                        labels: ["Fee Collected", "Fee Pending"],
+                        datasets: [{
+                            data: [m["Fee Collected"] || 0, m["Fee Pending"] || 0],
+                            backgroundColor: ["#00c9ff", "#ff758c"]
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+
+                // Conversion & Dropouts
+                conversionChart = new Chart(document.getElementById("conversionChart"), {
+                    type: "radar",
+                    data: {
+                        labels: ["Conversion Rate", "Dropouts"],
+                        datasets: [{
+                            label: "Performance",
+                            data: [m["Conversion Rate"] || 0, m["Dropouts"] || 0],
+                            backgroundColor: "rgba(255, 193, 7, 0.3)",
+                            borderColor: "#ffc107",
+                            pointBackgroundColor: "#ffc107"
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+
+                // Sales Target
+                salesTargetChart = new Chart(document.getElementById("salesTargetChart"), {
+                    type: "line",
+                    data: {
+                        labels: ["Target", "Admissions"],
+                        datasets: [{
+                            label: "Progress",
+                            data: [m["Monthly Sales Target"] || 0, m["Total Admissions"] || 0],
+                            borderColor: "#0d6efd",
+                            backgroundColor: "rgba(13, 110, 253, 0.2)",
+                            fill: true
+                        }]
+                    },
+                    options: { responsive: true }
+                });
+            });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const select = document.getElementById("monthYearSelect");
+        if (select && select.value) {
+            const [year, month] = select.value.split("-");
+            loadMetrics(year, month);
+        }
+        if (select) {
+            select.addEventListener("change", () => {
+                const [year, month] = select.value.split("-");
+                loadMetrics(year, month);
+            });
+        }
+    });
+</script>
+
+<!-- Extra Styles -->
+<style>
+    .hover-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hover-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+</style>
+{% endblock %}

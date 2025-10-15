@@ -1,60 +1,60 @@
 {% extends 'base.html' %}
-
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-center mb-4">Student List</h2>
-
-    <!-- Search Form -->
-    <form method="GET" class="mb-4">
-        <div class="row">
-            <div class="col-md-4">
-                <input type="text" name="student_id" class="form-control" placeholder="Search by Student ID" value="{{ request.GET.student_id }}">
-            </div>
-            <div class="col-md-4">
-                <input type="text" name="username" class="form-control" placeholder="Search by Username" value="{{ request.GET.username }}">
-            </div>
-            <div class="col-md-4">
-                <button type="submit" class="btn btn-primary">Search</button>
-                <a href="{% url 'student_list' %}" class="btn btn-secondary">Reset</a>
-            </div>
-        </div>
-    </form>
-
-    <!-- Student Table -->
-    <div class="table-responsive">
-        <table class="table table-bordered table-striped">
-            <thead class="thead-dark">
-                <tr>
-                    <th>Student ID</th>
-                    <th>Username</th>
-                    <th>Branch</th>
-                    <th>Course</th>
-                    <th>Batch</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for student in students %}
-                <tr>
-                    <td>{{ student.student_id }}</td>
-                    <td>{{ student.user.username }}</td>
-                    <td>{{ student.branch.name }}</td>
-                    <td>{{ student.course.name }}</td>
-                    <td>{{ student.batch.name }}</td>
-                    <td>
-                        <a href="{% url 'edit_student' student.id %}" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="{% url 'delete_student' student.id %}" class="btn btn-sm btn-danger">Delete</a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" class="text-center">No students found.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="d-flex justify-content-between mb-3">
+    <h4>Students in {{ batch.name }}</h4>
+    <div>
+        <a href="{% url 'add_student' batch.id %}" class="btn btn-primary me-2">Add Student</a>
+        <a href="{% url 'import_students' batch.id %}" class="btn btn-secondary me-2">Import from Excel</a>
+        <a href="{% url 'export_students' batch.id %}" class="btn btn-success">Export to Excel</a>
     </div>
-
-    <a href="{% url 'add_student' %}" class="btn btn-success">Add Student</a>
+</div>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Mobile</th>
+                <th>WhatsApp</th>
+                <th>Sales Person</th>
+                <th>Admission Date</th>
+                <!-- <th>Drop Out</th> -->
+                <th>Drop Out Date</th>
+                <!-- <th>Batch Change</th> -->
+                <th>Batch Change Date</th>
+                <th>Placement Pool Date </th>
+                <th>Placed Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for student in students %}
+            <tr>
+                <td>{{ student.user.get_full_name }}</td>
+                <td>{{ student.mobile_no }}</td>
+                <td>{{ student.whatsapp_no }}</td>
+                <td>{{ student.sales_person.user.get_full_name }}</td>
+                <td>{{ student.admission_date|date:"F Y" }}</td>  <!-- Month Year -->
+                <!-- <td>{{ student.drop_out|yesno:"Yes,No" }}</td> -->
+                <td>{{ student.dropout_date|date:"F Y" }}</td>
+                <!-- <td>{{ student.batch_change|yesno:"Yes,No" }}</td> -->
+                <td>{{ student.batch_change_date|date:"F Y" }}</td>
+                <td>{{ student.placement_pool_added_date|date:"F Y" }}</td>
+                <td>{{ student.placed_date|date:"F Y" }}</td>
+                <td>
+                    <a href="{% url 'edit_student' student.id %}" class="btn btn-warning btn-sm">Edit</a>
+                    <a href="{% url 'delete_student' student.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Delete this student?');">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No students found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="mt-3">
+        <a href="{% url 'add_student' batch.id %}" class="btn btn-success">Add Student</a>
+        <a href="{% url 'batch_list' %}" class="btn btn-secondary">Back</a>
+    </div>
 </div>
 {% endblock %}

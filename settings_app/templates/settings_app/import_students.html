@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Import Students into {{ batch.name }}</h2>
+    {% if messages %}
+    <div class="alert-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <div class="card p-4 shadow-sm">
+
+        <!-- Download Template Button -->
+        <div class="mb-3 text-end">
+            <a href="{% url 'download_student_template' batch.id %}" class="btn btn-primary">
+                <i class="bi bi-download"></i> Download Sample Excel
+            </a>
+        </div>
+
+        <!-- Upload Form -->
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="mb-3">
+                {{ form.excel_file.label_tag }}
+                {{ form.excel_file }}
+            </div>
+            <button type="submit" class="btn btn-success">Import</button>
+            <a href="{% url 'student_list' batch.id %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+
+    <div class="alert alert-info mt-4">
+        <strong>Note:</strong> The Excel file must have these columns:
+        <pre>first_name	last_name	username	password	mobile_no	whatsapp_no	sales_person_username admission_date  drop_out</pre>
+        <p><strong>admission_date:</strong> in dd-mm-yyyy format (e.g., 26-08-2025)</p>
+        <p><strong>drop_out:</strong> Yes or No (optional, defaults to No)</p>
+    </div>
+    {% if request.session.student_import_errors %}
+    <div class="alert alert-warning mt-4">
+        Some students could not be imported.  
+        <a href="{% url 'download_import_errors' batch.id %}" class="btn btn-outline-danger btn-sm">
+            Download Error Report
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

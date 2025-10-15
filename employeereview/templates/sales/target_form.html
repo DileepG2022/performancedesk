@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{% if edit %}Edit{% else %}Add{% endif %} Sales Target</h2>
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label>Sales Person</label>
+    {{ form.sales_person }}
+  </div>
+  <div class="mb-3">
+    <label>Target Month & Year</label>
+    {{ form.target_date }}
+  </div>
+  <div class="mb-3">
+    <label>Target Value</label>
+    {{ form.target_value }}
+  </div>
+  <button type="submit" class="btn btn-success">Save</button>
+  <a href="{% url 'sales_target_list' %}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

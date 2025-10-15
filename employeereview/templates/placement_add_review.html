@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <style>
+        #loadingOverlay {
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: rgba(255,255,255,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            z-index: 9999;
+        }
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        th, td { vertical-align: middle; text-align: center; }
+    </style>
+
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <p style="margin-top:12px;font-weight:bold;font-size:16px;">Saving, please wait…</p>
+    </div>
+
+    <h2 class="text-center mb-4">Placement Monthly Review</h2>
+
+    <!-- Placement Info -->
+    <div class="card shadow p-4 mb-4">
+        <h5>Placement Review Info</h5>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Placement Team Member</label>
+                <input type="text" class="form-control" value="{{ placement.user.get_full_name }}" readonly>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Select Review Month</label>
+                <input type="month" id="review_month" class="form-control" required>
+                <div id="monthMessage" class="form-text text-danger mt-1"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Placement Pool -->
+    <div class="card shadow p-4 mb-4">
+        <h5>Students in Placement Pool</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="studentPoolTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Course</th>
+                        <th>Student Name</th>
+                        <th>Batch</th>
+                        <th>Trainer</th>
+                        <th>Placed</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in students %}
+                        <tr data-student="{{ s.id }}">
+                            <td>{{ s.batch.course.name }}</td>
+                            <td>{{ s.user.first_name }} {{ s.user.last_name }}</td>
+                            <td>{{ s.batch.name }}</td>
+                            <td>{{ s.batch.faculty.user.get_full_name }}</td>
+                            <td>
+                                <input type="checkbox" class="form-check-input placed-checkbox"
+                                    data-student="{{ s.id }}">
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No students in Placement Pool</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="card shadow p-4 mb-4">
+        <h5>Metrics</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="metricsTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Filled dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Remarks -->
+    <div class="card shadow p-4 mb-4">
+        <h5>Remarks</h5>
+        <textarea id="remarks" class="form-control" rows="3" placeholder="Enter remarks here..."></textarea>
+    </div>
+
+    <div class="text-center">
+        <button class="btn btn-primary px-5" id="saveReviewBtn">Save Review</button>
+        <a href="{% url 'placement_dashboard' %}" class="btn btn-secondary px-5">Cancel</a>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(function(){
+    let poolCount = {{ students|length }};
+    const saveBtn = $("#saveReviewBtn");
+    const tbody = $("#metricsTable tbody");
+
+    // Fetch and render metrics dynamically
+    function loadMetrics(reviewMonth){
+        tbody.empty();
+        $.get("{% url 'get_placement_metrics' %}", { review_month: reviewMonth }, function(resp){
+            if(resp.status === "exists"){
+                $("#monthMessage").html(resp.message);
+                saveBtn.prop("disabled", true);
+                return;
+            }
+            if(resp.status === "invalid"){
+                $("#monthMessage").html(resp.message);
+                saveBtn.prop("disabled", true);
+                return;
+            }
+
+            $("#monthMessage").text("");
+            saveBtn.prop("disabled", false);
+
+            resp.metrics.forEach(m => {
+                let inputType = m.datatype === "Number" ? "number" : "text";
+                let readonlyAttr = m.readonly ? "readonly" : "";
+                tbody.append(`
+                    <tr>
+                        <td>${m.name}</td>
+                        <td>
+                            <input type="${inputType}" 
+                                   class="form-control metric-input" 
+                                   name="metric_${m.id}" 
+                                   value="${m.value}" 
+                                   ${readonlyAttr}>
+                        </td>
+                    </tr>
+                `);
+            });
+
+            // Ensure metrics update when placed students change
+            updateMetrics();
+        });
+    }
+
+    // Update placement-dependent metrics dynamically
+    function updateMetrics(){
+        let placed = $(".placed-checkbox:checked").length;
+        let conv = poolCount > 0 ? ((placed / poolCount) * 100).toFixed(2) : 0;
+
+        $("[name^='metric_']").each(function(){
+            let label = $(this).closest("tr").find("td:first").text();
+            if(label === "Total Placements"){
+                $(this).val(placed);
+            }
+            else if(label === "Conversion Rate"){
+                $(this).val(conv);
+            }
+        });
+    }
+
+    // Load metrics when review month is selected
+    $("#review_month").on("change", function(){
+        let val = $(this).val();
+        if(val){
+            loadMetrics(val);
+        } else {
+            tbody.empty();
+        }
+    });
+
+    // Update metrics when placed checkboxes change
+    $(document).on("change", ".placed-checkbox", updateMetrics);
+
+    // Save review
+    $("#saveReviewBtn").on("click", function(){
+        $("#loadingOverlay").show();
+
+        let reviewMonth = $("#review_month").val();
+        if(!reviewMonth){
+            alert("Please select review month.");
+            $("#loadingOverlay").hide();
+            return;
+        }
+
+        let formData = {
+            review_month: reviewMonth,
+            remarks: $("#remarks").val()
+        };
+
+        // Add metrics dynamically
+        $(".metric-input").each(function(){
+            formData[$(this).attr("name")] = $(this).val();
+        });
+
+        // Add placed students
+        $(".placed-checkbox").each(function(){
+            if($(this).is(":checked")){
+                if(!formData["placed_students[]"]){
+                    formData["placed_students[]"] = [];
+                }
+                formData["placed_students[]"].push($(this).data("student"));
+            }
+        });
+
+        $.post("{% url 'save_placement_review' %}", formData, function(resp){
+            if(resp.success){
+                alert(resp.success);
+                window.location.href = "{% url 'placement_dashboard' %}";
+            }
+        }).fail(function(xhr){
+            try {
+                let resp = JSON.parse(xhr.responseText);
+                if(resp.error){
+                    alert(resp.error);
+                } else {
+                    alert("An unexpected error occurred.");
+                }
+            } catch (e) {
+                alert("Server error: " + xhr.statusText);
+            }
+        }).always(function(){
+            $("#loadingOverlay").hide();
+        });
+    });
+});
+
+// Attach CSRF token
+$.ajaxSetup({ headers: { "X-CSRFToken": "{{ csrf_token }}" } });
+</script>
+
+{% endblock %}

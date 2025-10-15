@@ -1,52 +1,147 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-5">
-    <h2 class="text-center mb-4">Faculty Dashboard</h2>
+<div class="container-fluid px-4 mt-4">
+    <h2 class="text-center mb-4 fw-bold text-primary">
+        👨‍🏫 Faculty Dashboard
+    </h2>
 
-    <!-- Welcome Message -->
-    <div class="alert alert-info text-center">
-        Welcome, <strong>{{ user.first_name }} {{ user.last_name }}</strong>! You can add monthly reviews for your assigned batches.
+    <!-- Welcome -->
+    <div class="alert alert-info shadow-sm text-center rounded-pill">
+        Welcome, <strong>{{ user.first_name }} {{ user.last_name }}</strong>!  
+        Manage your monthly reviews and batches here.
     </div>
 
-    <!-- List of Batches Assigned to Faculty -->
-    <div class="card shadow-lg p-3 mb-5 bg-white rounded">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">Your Assigned Batches</h4>
+    <div class="d-flex justify-content-end mb-4">
+  <div class="input-group" style="max-width: 250px;">
+    <label class="input-group-text" for="monthSelect"><i class="bi bi-calendar-event"></i></label>
+    <select class="form-select" id="monthSelect">
+  {% for month in months %}
+    <option value="{{ month.value }}" {% if month.value == default_month %}selected{% endif %}>
+      {{ month.name }}
+    </option>
+  {% endfor %}
+</select>
+
+  </div>
+</div>
+
+    <!-- Quick Stats (Row 1) -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 rounded-4 h-100 text-white"
+                 style="background: linear-gradient(135deg,#4facfe,#00f2fe);">
+                <div class="card-body text-center">
+                    <i class="bi bi-clipboard-check display-4"></i>
+                    <h5 class="mt-3">Completed Reviews</h5>
+                    <p class="fs-4 fw-bold" id="completedReviewsCount">{{ completed_reviews|default:0 }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 rounded-4 h-100 text-white"
+                 style="background: linear-gradient(135deg,#43e97b,#38f9d7);">
+                <div class="card-body text-center">
+                    <i class="bi bi-hourglass-split display-4"></i>
+                    <h5 class="mt-3">Pending Reviews</h5>
+                    <p class="fs-4 fw-bold" id="pendingReviewsCount">{{ pending_reviews|default:0 }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-lg border-0 rounded-4 h-100 text-white"
+                 style="background: linear-gradient(135deg,#ff9a9e,#fad0c4);">
+                <div class="card-body text-center">
+                    <i class="bi bi-people-fill display-4"></i>
+                    <h5 class="mt-3">Assigned Batches</h5>
+                    <p class="fs-4 fw-bold">{{ batches|length }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold text-primary">Monthly Review Status</h5>
+                    <canvas id="reviewStatusChart"></canvas>
+                </div>
+            </div>
+        </div> -->
+        
+        <!-- <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold text-success">Batch Progress</h5>
+                    <canvas id="batchProgressChart"></canvas>
+                </div>
+            </div>
+        </div> -->
+    </div>
+
+    <!-- All Months Review Card -->
+<div class="row mb-4">
+  <div class="col-md-4">
+    <div class="card shadow-lg border-0 rounded-4 h-100 text-white" style="background: linear-gradient(135deg, #f7971e, #ffd200);">
+      <div class="card-body text-center">
+        <i class="bi bi-file-earmark-text display-4"></i>
+        <h5 class="card-title mt-3">All Months Review</h5>
+        <p class="card-text">View consolidated review reports for all your batches</p>
+        <a href="{% url 'all_month_reviews' %}" class="btn btn-light rounded-pill shadow-sm">
+          <i class="bi bi-eye"></i> View Reviews
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+    <!-- All Batches -->
+    <div class="card shadow-lg border-0 rounded-4 mb-4">
+        <div class="card-header bg-primary text-white fw-bold">
+            Your Assigned Batches
         </div>
         <div class="card-body">
             {% if batches %}
                 <div class="table-responsive">
-                    <table class="table table-bordered table-striped">
-                        <thead class="thead-dark">
-                            <tr>
-                                <th>Batch Name</th>
-                                <th>Course</th>
-                                <th>Branch</th>
-                                <th>Actions</th>
-                                <!-- <th>Mark Attendance by Uploading Class Photo</th> -->
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for batch in batches %}
-                                <tr>
-                                    <td>{{ batch.name }}</td>
-                                    <td>{{ batch.course.name }}</td>
-                                    <td>{{ batch.branch.name }}</td>
-                                     <td>
-                                        <!-- Exam Options -->
-                                         {% comment %} 
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+    <tr>
+        <th>Batch</th>
+        <th>Course</th>
+        <th>Branch</th>
+        <th>Status</th>
+        <th>Actions</th>
+    </tr>
+</thead>
+<tbody>
+{% for batch in batches %}
+    <tr data-batch-id="{{ batch.id }}">
+        <td>{{ batch.name }}</td>
+        <td>{{ batch.course.name }}</td>
+        <td>{{ batch.branch.name }}</td>
+        <td class="review-status"><span class="badge bg-secondary">-</span></td>
+        <td>
+            <a href="{% url 'trainer_add_review' batch.id %}" 
+               class="btn btn-success btn-sm review-btn">
+                <i class="bi bi-pencil-square"></i> Review
+            </a>
+            
+            <a href="{% url 'monthly_review_report' %}?faculty_id={{ batch.faculty.id }}&batch_id={{ batch.id }}" 
+   class="btn btn-info btn-sm report-link">
+   <i class="bi bi-file-earmark-text"></i> Report
+</a>
 
-                                        <!-- <a href="{% url 'create_exam' %}?batch_id={{ batch.id }}" class="btn btn-success btn-sm mb-1">Monthly Review</a>
-                                        <a href="{% url 'list_exams_by_batch' batch.id %}" class="btn btn-info btn-sm mb-1">View Exams</a> -->
-                                        {% endcomment %}
-                                        <a href="{% url 'create_monthly_review' batch.id %}" class="btn btn-success btn-sm mb-1">Monthly Review</a>
+        </td>
+    </tr>
+{% endfor %}
+</tbody>
 
-                                    </td>
-                                    
-                                </tr>
-                            {% endfor %}
-                        </tbody>
                     </table>
                 </div>
             {% else %}
@@ -54,40 +149,114 @@
             {% endif %}
         </div>
     </div>
-    <!-- Optional: Exam Summary Panel -->
-    {% if exams %}
-    <div class="card shadow-lg mb-5">
-        <div class="card-header bg-secondary text-white">
-            <h4 class="mb-0">Your Recently Created Exams</h4>
-        </div>
-        <div class="card-body">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Batch</th>
-                        <th>Start</th>
-                        <th>End</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for exam in exams %}
-                    <tr>
-                        <td>{{ exam.title }}</td>
-                        <td>{{ exam.batch.name }}</td>
-                        <td>{{ exam.start_time }}</td>
-                        <td>{{ exam.end_time }}</td>
-                        <td>
-                            <a href="{% url 'add_questions' exam.id %}" class="btn btn-outline-primary btn-sm">Add Questions</a>
-                            <a href="{% url 'faculty_exam_results' exam.id %}" class="btn btn-outline-dark btn-sm">View Results</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-    {% endif %}
 </div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const monthSelect = document.getElementById("monthSelect");
+
+// When clicking any Report button, inject the selected month into its href
+document.querySelectorAll(".report-link").forEach(link => {
+    link.addEventListener("click", function(e) {
+        const month = monthSelect.value;
+        if (month) {
+            // Preserve existing href params
+            const url = new URL(this.href, window.location.origin);
+            url.searchParams.set("month", month);  
+            this.href = url.toString();
+        }
+    });
+});
+function loadReviewStats(month) {
+    fetch(`/get-monthly-review-stats/?month=${month}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.completed_reviews !== undefined) {
+                // Update summary cards
+                document.querySelector("#completedReviewsCount").textContent = data.completed_reviews;
+                document.querySelector("#pendingReviewsCount").textContent = data.pending_reviews;
+
+                // Reset all statuses
+                document.querySelectorAll("tbody tr").forEach(row => {
+                    row.querySelector(".review-status").innerHTML =
+                        `<span class="badge bg-secondary">-</span>`;
+                    row.querySelector(".review-btn").classList.remove("disabled");
+                });
+
+                // Mark completed
+                data.reviewed_batches.forEach(id => {
+                    const row = document.querySelector(`tr[data-batch-id="${id}"]`);
+                    if (row) {
+                        row.querySelector(".review-status").innerHTML =
+                            `<span class="badge bg-success">Completed</span>`;
+                        // disable review button
+                        row.querySelector(".review-btn").classList.add("disabled");
+                    }
+                });
+
+                // Mark pending
+                data.pending_batches.forEach(id => {
+                    const row = document.querySelector(`tr[data-batch-id="${id}"]`);
+                    if (row) {
+                        row.querySelector(".review-status").innerHTML =
+                            `<span class="badge bg-warning text-dark">Pending</span>`;
+                    }
+                });
+            }
+        })
+        .catch(err => console.error("Error fetching review stats:", err));
+}
+
+// const monthSelect = document.getElementById("monthSelect");
+monthSelect.addEventListener("change", function() {
+    loadReviewStats(this.value);
+});
+
+// Load first time
+window.addEventListener("DOMContentLoaded", function() {
+    loadReviewStats(monthSelect.value);
+});
+</script>
+
+
+<script>
+//     document.getElementById("monthSelect").addEventListener("change", function() {
+//     const month = this.value;
+
+//     fetch(`/get-monthly-review-stats/?month=${month}`)
+//         .then(response => response.json())
+//         .then(data => {
+//             if (data.completed_reviews !== undefined) {
+//                 document.querySelector("#completedReviewsCount").textContent = data.completed_reviews;
+//                 document.querySelector("#pendingReviewsCount").textContent = data.pending_reviews;
+//             }
+//         })
+//         .catch(err => console.error("Error fetching review stats:", err));
+// });
+//     // const ctx1 = document.getElementById('reviewStatusChart');
+//     // new Chart(ctx1, {
+//     //     type: 'doughnut',
+//     //     data: {
+//     //         labels: ['Completed', 'Pending'],
+//     //         datasets: [{
+//     //             data: [{{ completed_reviews|default:0 }}, {{ pending_reviews|default:0 }}],
+//     //             backgroundColor: ['#43e97b', '#ff9a9e']
+//     //         }]
+//     //     }
+//     // });
+
+//     // const ctx2 = document.getElementById('batchProgressChart');
+//     // new Chart(ctx2, {
+//     //     type: 'bar',
+//     //     data: {
+//     //         labels: ['Ongoing', 'Completed'],
+//     //         datasets: [{
+//     //             label: 'Batches',
+//     //             data: [{{ ongoing_batches|default:0 }}, {{ completed_batches|default:0 }}],
+//     //             backgroundColor: ['#4facfe', '#36d1dc']
+//     //         }]
+//     //     }
+//     // });
+</script>
 {% endblock %}

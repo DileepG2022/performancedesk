@@ -1,0 +1,76 @@
+<!-- templates/reports/monthly_review_report.html -->
+{% load static %}
+
+<h2>Trainer Monthly Review Report</h2>
+
+<label for="trainer">Trainer:</label>
+<select id="trainer">
+    <option value="">--Select Trainer--</option>
+    {% for t in trainers %}
+    <option value="{{ t.id }}">{{ t.user.username }}</option>
+    {% endfor %}
+</select>
+
+<label for="batch">Batch:</label>
+<select id="batch">
+    <option value="">--Select Batch--</option>
+</select>
+
+<label for="month">Month:</label>
+<select id="month">
+    <option value="">--Select Month--</option>
+</select>
+
+<button id="viewReport">View Report</button>
+
+<div id="reportResult"></div>
+
+<script src="{% static 'js/jquery.min.js' %}"></script>
+<script>
+$(document).ready(function(){
+    $("#trainer").change(function(){
+        var trainerId = $(this).val();
+        $("#batch").empty().append('<option value="">--Select Batch--</option>');
+        $("#month").empty().append('<option value="">--Select Month--</option>');
+        if(trainerId){
+            $.getJSON("/report/batches/" + trainerId + "/", function(data){
+                $.each(data.batches, function(i, batch){
+                    $("#batch").append('<option value="'+batch.id+'">'+batch.name+'</option>');
+                });
+            });
+        }
+    });
+
+    $("#batch").change(function(){
+        var trainerId = $("#trainer").val();
+        var batchId = $(this).val();
+        $("#month").empty().append('<option value="">--Select Month--</option>');
+        if(trainerId && batchId){
+            $.getJSON("/report/months/" + trainerId + "/" + batchId + "/", function(data){
+                $.each(data.months, function(i, m){
+                    $("#month").append('<option value="'+m.id+'">'+m.month+'</option>');
+                });
+            });
+        }
+    });
+
+    $("#viewReport").click(function(){
+        var reviewId = $("#month").val();
+        if(reviewId){
+            $.getJSON("/report/generate/" + reviewId + "/", function(data){
+                var html = "<h3>Report for " + data.trainer + " - " + data.batch + " (" + data.month + ")</h3>";
+                html += "<p>Total Students: " + data.total_students + "</p>";
+                html += "<p>Remarks: " + (data.remarks || '-') + "</p>";
+                html += "<h4>Metrics</h4><ul>";
+                $.each(data.metrics, function(i, m){ html += "<li>"+m.metric+": "+m.value+"</li>"; });
+                html += "</ul><h4>Activities</h4><table border='1'><tr><th>Student</th><th>Activity</th><th>Completed Date</th></tr>";
+                $.each(data.activities, function(i, a){
+                    html += "<tr><td>"+a.student+"</td><td>"+a.activity+"</td><td>"+(a.completed_date || '-')+"</td></tr>";
+                });
+                html += "</table>";
+                $("#reportResult").html(html);
+            });
+        }
+    });
+});
+</script>

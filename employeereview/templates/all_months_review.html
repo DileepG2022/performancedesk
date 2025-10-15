@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Trainer Monthly Reviews (All Months)</h2>
+
+    <form method="post" class="mb-4">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-md-6">
+    <label>Trainer</label>
+    
+    {% if is_trainer_view %}
+        <input type="hidden" name="faculty_id" value="{{ selected_faculty_id }}">
+        <select name="faculty_id" class="form-select" disabled>
+            {% for faculty in faculties %}
+            
+                {% if faculty.id|stringformat:"s" == selected_faculty_id|stringformat:"s" %}                    
+                    <option value="{{ faculty.id }}" selected>{{ faculty.user.get_full_name }}</option>
+                {% else %}
+                    <option value="{{ faculty.id }}">{{ faculty.user.get_full_name }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    {% else %}
+        <select name="faculty_id" class="form-select" required>
+            <option value="">Select Trainer</option>
+            {% for faculty in faculties %}
+                {% if faculty.id|stringformat:"s" == selected_faculty_id|stringformat:"s" %}                    
+                    <option value="{{ faculty.id }}" selected>{{ faculty.user.get_full_name }}</option>
+                {% else %}
+                    <option value="{{ faculty.id }}">{{ faculty.user.get_full_name }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    {% endif %}
+</div>
+            <div class="col-md-6">
+                <label>Batch</label>
+                <select name="batch_id" id="batchDropdown" class="form-select" required>
+    <option value="">Select Batch</option>
+    {% if is_trainer_view %}
+            {% for batch in batches %}
+                <option value="{{ batch.id }}" {% if request.POST.batch_id|stringformat:'s' == batch.id|stringformat:'s' %}selected{% endif %}>
+                    {{ batch.name }}
+                </option>
+            {% endfor %}
+        {% endif %}
+</select>
+
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary">View All Reviews</button>
+        </div>
+    </form>
+
+    {% if reviews %}
+        {% for review in reviews %}
+            <hr>
+            <h4>Review for {{ review.review_month }}</h4>
+            <p><strong>Trainer:</strong> {{ review.user.user.get_full_name }}</p>
+            <p><strong>Batch:</strong> {{ review.batch.name }}</p>
+            <p><strong>Total Students:</strong> {{ review.total_students }}</p>
+            <p><strong>Start Date:</strong> {{ review.start_date }} | <strong>End Date:</strong> {{ review.end_date }}</p>
+
+            <h5>Metrics</h5>
+            <table class="table table-bordered">
+                <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+                <tbody>
+                    {% for m in review.metrics %}
+                        <tr><td>{{ m.metric_name }}</td><td>{{ m.metric_value }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <h5>Milestone Activities</h5>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Activity</th><th>Day</th><th>Planned Date</th>
+                        <th>Completed Date</th><th>Status</th><th>Participation</th><th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in review.activities %}
+                        <tr>
+                            <td>{{ a.activity }}</td>
+                            <td>{{ a.day }}</td>
+                            <td>{{ a.planned_date }}</td>
+                            <td
+                    {% if a.completed_date and a.completed_date > a.planned_date %}
+                        style="color: red;"
+                    {% endif %}>
+                    {{ a.completed_date }}
+                </td>
+                            <td>{{ a.status }}</td>
+                            <td>{{ a.participation }}</td>
+                            <td>{{ a.remarks }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endfor %}
+    {% elif request.method == "POST" %}
+        <p class="text-danger">No reviews found for this Trainer and Batch.</p>
+    {% endif %}
+</div>
+
+<script>
+    
+    const facultySelect = document.querySelector('select[name="faculty_id"]');
+    
+    const batchSelect = document.getElementById('batchDropdown');
+
+    function loadBatches(facultyId, selectedBatchId = null) {
+    // alert("loadBatches " + facultyId);
+        batchSelect.innerHTML = '<option value="">Loading...</option>';
+        fetch(`/ajax/get-batches/?faculty_id=${facultyId}`)
+            .then(res => res.json())
+            .then(data => {
+                batchSelect.innerHTML = '<option value="">Select Batch</option>';
+                data.forEach(batch => {
+                    const opt = document.createElement('option');
+                    opt.value = batch.id;
+                    opt.textContent = batch.name;
+                    if (selectedBatchId && selectedBatchId == batch.id) {
+                        opt.selected = true;
+                    }
+                    batchSelect.appendChild(opt);
+                });
+            });
+    }
+
+    // On change of trainer dropdown
+    facultySelect.addEventListener('change', function () {
+        const facultyId = this.value;
+        // alert("Change " + facultyId);
+        loadBatches(facultyId);
+    });
+
+    // If form was POSTed, reload batches with selected batch
+    window.addEventListener('DOMContentLoaded', function () {
+        const facultyId = facultySelect.value;
+        
+        // const facultyId = "{{selected_faculty_id}}";
+        // alert("Load " + facultyId);
+        const selectedBatchId = "{{ request.POST.batch_id|default:'' }}";
+        if (facultyId) {
+            loadBatches(facultyId, selectedBatchId);
+        }
+    });
+</script>
+{% endblock %}
+
+
+

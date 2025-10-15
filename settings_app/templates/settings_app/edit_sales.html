@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Edit Sales Staff</h2>
+    {% if messages %}
+    <div class="alert-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form.branch.label_tag }}
+            {{ form.branch }}
+        </div>
+        <div class="mb-3">
+            <label>Mobile No.</label>
+            {{ form.mobile_no }}
+        </div>
+        <div class="mb-3">
+            <label>WhatsApp No.</label>
+            {{ form.whatsapp_no }}
+        </div>
+        <div class="mb-3">
+            <label>Reporting Officers</label>
+            {{ form.reporting_officers }}
+        </div>
+        <button type="submit" class="btn btn-warning">Update Sales Staff</button>
+        <a href="{% url 'sales_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

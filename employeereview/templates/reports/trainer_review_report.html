@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-primary text-white rounded-top-4">
+            <h4 class="mb-0">Trainer Monthly Review Report</h4>
+        </div>
+        <div class="card-body">
+            <!-- Selection Form -->
+            <form id="reportForm" class="row g-3">
+                <div class="col-md-4">
+                    <label for="trainer" class="form-label fw-bold">Select Trainer</label>
+                    <select id="trainer" name="trainer" class="form-select" required {% if selected_trainer %}disabled{% endif %}>
+    <option value="">--- Select Trainer ---</option>
+    {% for trainer in trainers %}
+        <option value="{{ trainer.id }}" {% if selected_trainer == trainer.id %}selected{% endif %}>
+            {{ trainer.user.get_full_name }}
+        </option>
+    {% endfor %}
+</select>
+
+                </div>
+
+                <div class="col-md-4">
+                    <label for="batch" class="form-label fw-bold">Select Batch</label>
+                    <select id="batch" name="batch" class="form-select" 
+        {% if selected_trainer %}{% else %}disabled{% endif %} required>
+    <option value="">--- Select Batch ---</option>
+    {% if batches %}
+        {% for b in batches %}
+            <option value="{{ b.id }}" {% if selected_batch|default:'' == b.id|stringformat:"s" %}selected{% endif %}>
+                {{ b.name }}
+            </option>
+        {% endfor %}
+    {% endif %}
+</select>
+
+                </div>
+
+                <div class="col-md-4">
+                    <label for="month" class="form-label fw-bold">Select Month</label>
+                    <select id="month" name="month" class="form-select" disabled required>
+                        <option value="">--- Select Month ---</option>
+                    </select>
+                </div>
+
+                <div class="col-12 text-center mt-3">
+                    <button type="submit" class="btn btn-success px-4 rounded-pill shadow-sm">
+                        <i class="bi bi-file-earmark-text"></i> View Report
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Report Section -->
+    <div id="reportSection" class="mt-5"></div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const trainerSelect = document.getElementById("trainer");
+    const batchSelect = document.getElementById("batch");
+    const monthSelect = document.getElementById("month");
+    const reportSection = document.getElementById("reportSection");
+    const selectedBatch = "{{ selected_batch|default:'' }}";
+    const selectedMonth = "{{ selected_month|default:'' }}";
+
+    // Auto-fetch months if batch preselected
+    if (selectedBatch) {
+        fetch(`/get-months/?batch_id=${selectedBatch}`)
+            .then(res => res.json())
+            .then(data => {
+                monthSelect.innerHTML = '<option value="">--- Select Month ---</option>';
+                data.forEach(m => {
+                    const opt = document.createElement("option");
+                    opt.value = m.id;
+                    opt.textContent = `${m.month} ${m.year}`;
+                    // Match YYYY-MM string with this option
+            const ym = `${m.year}-${String(m.month_number).padStart(2, "0")}`;
+            
+            if (selectedMonth && ym === selectedMonth) {
+                opt.selected = true;
+            }
+                    monthSelect.appendChild(opt);
+                });
+                monthSelect.disabled = false;
+            });
+    }
+
+    // Fetch batches only if trainer dropdown is enabled
+    if (!trainerSelect.disabled) {
+        trainerSelect.addEventListener("change", function () {
+            fetch(`/get-batches/?trainer_id=${this.value}`)
+                .then(res => res.json())
+                .then(data => {
+                    batchSelect.innerHTML = '<option value="">--- Select Batch ---</option>';
+                    data.forEach(b => {
+                        batchSelect.innerHTML += `<option value="${b.id}">${b.name}</option>`;
+                    });
+                    batchSelect.disabled = false;
+                    monthSelect.disabled = true;
+                });
+        });
+    }
+
+    batchSelect.addEventListener("change", function () {
+        fetch(`/get-months/?batch_id=${this.value}`)
+            .then(res => res.json())
+            .then(data => {
+                monthSelect.innerHTML = '<option value="">--- Select Month ---</option>';
+                data.forEach(m => {
+                    monthSelect.innerHTML += `<option value="${m.id}">${m.month} ${m.year}</option>`;
+                });
+                monthSelect.disabled = false;
+            });
+    });
+
+    document.getElementById("reportForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        fetch(`/view-review-report/?review_id=${monthSelect.value}`)
+            .then(res => res.text())
+            .then(html => {
+                reportSection.innerHTML = html;
+            });
+    });
+});
+
+</script>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">{{ title }}</h2>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">First Name</label>
+                <input type="text" name="first_name" class="form-control"
+                       value="{{ placement.user.first_name|default:'' }}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Last Name</label>
+                <input type="text" name="last_name" class="form-control"
+                       value="{{ placement.user.last_name|default:'' }}" required>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Username</label>
+                <input type="text" name="username" class="form-control"
+                       value="{{ placement.user.username|default:'' }}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control"
+                       value="{{ placement.user.email|default:'' }}" required>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">
+                    Password {% if placement %}<small class="text-muted">(Leave blank to keep current password)</small>{% endif %}
+                </label>
+                <input type="password" name="password" class="form-control">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Branch</label>
+                <select name="branch" class="form-select" required>
+                    <option value="">Select Branch</option>
+                    {% for branch in branches %}
+                        <option value="{{ branch.id }}"
+                            {% if placement and placement.branch.id == branch.id %}selected{% endif %}>
+                            {{ branch.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Mobile No</label>
+                <input type="text" name="mobile_no" class="form-control"
+                       value="{{ placement.mobile_no|default:'' }}">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">WhatsApp No</label>
+                <input type="text" name="whatsapp_no" class="form-control"
+                       value="{{ placement.whatsapp_no|default:'' }}">
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{% url 'placement_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

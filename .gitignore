@@ -48,3 +48,11 @@ coverage.xml
 
 # Node modules (if using npm/yarn for frontend)
 node_modules/
+
+# Student Sheets
+Student_Sheets/
+*.xlsx
+
+# Student Sheets
+DB_BackUp/
+*.sqlite3

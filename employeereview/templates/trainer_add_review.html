@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <style>
+#loadingOverlay {
+    position: fixed;
+    top:0; left:0; width:100%; height:100%;
+    background: rgba(255,255,255,0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 9999;
+}
+.spinner {
+    border: 6px solid #f3f3f3;
+    border-top: 6px solid #3498db;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    100% { transform: rotate(360deg); }
+}
+
+/* Scrollable table wrapper */
+.activity-table-wrapper {
+    max-height: 500px;
+    overflow-y: auto;
+    overflow-x: auto;
+    position: relative;
+}
+
+/* Freeze header row */
+#studentActivityTable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #212529;
+    color: #fff;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #dee2e6;
+    white-space: nowrap;
+}
+
+/* Freeze first column (Student column) */
+#studentActivityTable th:first-child,
+#studentActivityTable td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 15;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    white-space: nowrap;
+}
+
+/* Ensure header + first col works together */
+#studentActivityTable thead th:first-child {
+    z-index: 25;
+    background: #212529;
+    color: #fff;
+}
+    </style>
+
+<div id="loadingOverlay">
+    <div class="spinner"></div>
+    <p style="margin-top:12px;font-weight:bold;font-size:16px;">Saving, please wait…</p>
+</div>
+
+    <h2 class="text-center mb-4">Trainer Monthly Review</h2>
+
+    <!-- Trainer & Batch Info -->
+    <div class="card shadow p-4 mb-4">
+        <h5>Trainer & Batch Info</h5>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Trainer Name</label>
+                <input type="text" class="form-control" value="{{ trainer.user.username }}" readonly>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Batch Name</label>
+                <input type="text" class="form-control" value="{{ batch.name }}" readonly>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Total Students</label>
+                <input type="text" class="form-control" value="{{ batch.total_students }}" readonly>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Start Date</label>
+                <input type="text" class="form-control" value="{{ batch.start_date|date:"F d, Y" }}" readonly>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">End Date</label>
+                <input type="text" class="form-control" value="{{ batch.end_date|date:"F d, Y" }}" readonly>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Select Review Month</label>
+                <input type="month" id="review_month" class="form-control" required>
+                <div id="monthMessage" class="form-text text-danger mt-1"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="card shadow p-4 mb-4">
+        <h5>Metrics</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="metricsTable">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Metric</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- AJAX populates -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Student Activity Completion -->
+<div class="card shadow p-4 mb-4">
+    <h5>Student Activity Completion</h5>
+    <div class="activity-table-wrapper">
+        <table class="table table-bordered table-hover" id="studentActivityTable">
+            <thead class="table-dark">
+                <tr>
+                    <th>Student</th>
+                    <!-- Activities + Planned Date added dynamically -->
+                </tr>
+            </thead>
+            <tbody>
+                <!-- rows dynamically filled -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+    <!-- Remarks -->
+    <div class="card shadow p-4 mb-4">
+        <h5>Remarks</h5>
+        <textarea id="remarks" class="form-control" rows="3" placeholder="Enter remarks here..."></textarea>
+    </div>
+
+    <div class="text-center">
+        <button class="btn btn-primary px-5" id="saveReviewBtn">Save Review</button>
+        <a href="{% url 'faculty_dashboard' %}" class="btn btn-secondary px-5">Cancel</a>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(function(){
+    let batchId = {{ batch.id }};
+    let activities = [], students = [];
+    const saveBtn = $("#saveReviewBtn");
+    const monthMessage = $("#monthMessage");
+
+    function loadMetrics(){
+        let reviewMonth = $("#review_month").val();
+        monthMessage.text("");      
+        saveBtn.prop("disabled", true);
+
+        if(!reviewMonth) return;
+
+        $.get("{% url 'get_trainer_metrics' %}", {batch_id: batchId, review_month: reviewMonth}, function(response){
+            if(response.status === "blocked" || response.status === "exists"){
+                monthMessage
+            .removeClass("text-success")
+            .addClass("text-danger fw-bold")
+            .text(response.message);
+        saveBtn.prop("disabled", true);
+        return;
+            }
+
+            saveBtn.prop("disabled", false);
+
+            // Show prefill message if available
+    if(response.message){
+        monthMessage
+            .removeClass("text-danger")
+            .addClass("text-success fw-bold")
+            .text(response.message);
+    } else {
+        monthMessage.text("");
+    }
+
+            // --- Metrics ---
+            let tbody = $("#metricsTable tbody").empty();
+            response.metrics.forEach(m=>{
+                let inputType = (m.datatype === "Number") ? "number" : "text";
+                let readonly = m.readonly ? "readonly" : "";
+                tbody.append(`
+                    <tr>
+                        <td>${m.name}</td>
+                        <td>
+                            <input type="${inputType}" class="form-control metric-input"
+                                   name="metric_${m.id}" value="${m.value}" ${readonly} required>
+                        </td>
+                    </tr>
+                `);
+            });
+
+            // --- Students & Activity Completion ---
+            students = response.students;
+            activities = response.activities;
+            let saTable = $("#studentActivityTable tbody").empty();
+            let headerRow = $("#studentActivityTable thead tr").empty().append("<th>Student</th>");
+            
+            activities.forEach(a => {
+                headerRow.append(`
+                    <th>
+                        ${a.activity}<br>
+                        <small style="color: white;">Planned: ${a.planned_date || '-'}</small><br>
+                        <input type="checkbox" class="form-check-input header-checkbox" data-activity="${a.id}"> All Done
+                        <input type="date" class="form-control form-control-sm mt-1 header-date" data-activity="${a.id}">
+                    </th>
+                `);
+            });
+
+            students.forEach(s=>{
+                let row = `<tr data-student="${s.id}"><td>${s.user__first_name} ${s.user__last_name}</td>`;
+                activities.forEach(a=>{
+                    row += `
+                        <td>
+                            <input type="checkbox" class="activity-checkbox" data-student="${s.id}" data-activity="${a.id}">
+                            <input type="date" class="form-control form-control-sm mt-1 completed-date"
+                                   data-student="${s.id}" data-activity="${a.id}">
+                        </td>`;
+                });
+                row += "</tr>";
+                saTable.append(row);
+            });
+
+            // --- Pre-fill previous month data ---
+            let prevActivities = response.previous_data.activities || {};
+            $(".activity-checkbox").each(function() {
+                let studentId = $(this).data("student");
+                let activityId = $(this).data("activity");
+                let key = activityId + "_" + studentId;
+                if (prevActivities[key]) {
+                    let done = prevActivities[key].done === "on";
+                    let dateVal = prevActivities[key].date;
+                    $(this).prop("checked", done);
+                    $(`.completed-date[data-student=${studentId}][data-activity=${activityId}]`).val(dateVal);
+                }
+            });
+
+            // --- Bulk checkbox/date handling ---
+            $(".header-checkbox").off("change").on("change", function(){
+                let activityId = $(this).data("activity");
+                let checked = $(this).is(":checked");
+                $(`.activity-checkbox[data-activity=${activityId}]`).prop("checked", checked);
+            });
+
+            $(".header-date").off("change input").on("change input", function(){
+                let activityId = $(this).data("activity");
+                let value = $(this).val();
+                $(`.completed-date[data-activity=${activityId}]`).val(value);
+            });
+        });
+    }
+
+    $("#saveReviewBtn").on("click", function(){
+        $("#loadingOverlay").show();  
+        let reviewMonth = $("#review_month").val();
+        if(!reviewMonth){
+            alert("Please select review month.");
+            $("#loadingOverlay").hide();
+            return;
+        }
+
+        // --- Validate metrics ---
+        let allValid = true;
+        $(".metric-input").each(function(){
+            if(!$(this).val().trim()){
+                $(this).addClass("is-invalid");
+                allValid = false;
+            } else {
+                $(this).removeClass("is-invalid");
+            }
+        });
+        if(!allValid){
+            alert("⚠️ Please fill in all metric values before saving.");
+            $("#loadingOverlay").hide();
+            return;
+        }
+
+        let formData = {
+            batch_id: batchId,
+            review_month: reviewMonth,
+            remarks: $("#remarks").val()
+        };
+
+        // Collect Metrics
+        $(".metric-input").each(function(){
+            formData[$(this).attr("name")] = $(this).val();
+        });
+
+        // Collect Activities
+        $(".activity-checkbox").each(function(){
+            let studentId = $(this).data("student");
+            let activityId = $(this).data("activity");
+            let checked = $(this).is(":checked");
+            let dateVal = $(`.completed-date[data-student=${studentId}][data-activity=${activityId}]`).val();
+
+            let key = `activity_${activityId}_student_${studentId}`;
+            formData[key] = JSON.stringify({
+                done: checked ? "on" : "off",
+                date: dateVal || ""
+            });
+        });
+
+        $.post("{% url 'save_trainer_review' %}", formData, function(resp){
+    // success case
+    if(resp.success){
+        alert(resp.success);
+        window.location.href = "{% url 'faculty_dashboard' %}";
+    }
+}).fail(function(xhr){
+    // error case
+    try {
+        let resp = JSON.parse(xhr.responseText);
+        if(resp.error){
+            alert(resp.error);
+        } else {
+            alert("An unexpected error occurred.");
+        }
+    } catch (e) {
+        alert("Server error: " + xhr.statusText);
+    }
+}).always(function(){
+    $("#loadingOverlay").hide();
+});
+    });
+
+    $("#review_month").on("change", loadMetrics);
+    saveBtn.prop("disabled", true);
+});
+
+$.ajaxSetup({
+    headers: { "X-CSRFToken": "{{ csrf_token }}" }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    @media print {
+        form, .btn, .navbar, .footer, .no-print {
+            display: none !important;
+        }
+
+        table {
+            page-break-inside: avoid;
+        }
+
+        body {
+            margin: 1cm;
+        }
+    }
+</style>
+
+<div class="container mt-5">
+    <h3 class="mb-4">Monthly Review Report</h3>
+
+<form method="post" id="reportForm" class="mb-4">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-md-4">
+            <label>Trainer</label>
+            
+            {% if is_faculty %}
+            
+            
+        <input type="hidden" name="faculty_id" id="facultySelect" value="{{ selected_faculty_id }}">
+        <select class="form-select" disabled>
+            {% for faculty in faculties %}
+            
+                {% if faculty.id|stringformat:"s" == selected_faculty_id|stringformat:"s" %}                    
+                    <option value="{{ faculty.id }}" selected>{{ faculty.user.get_full_name }}</option>
+                {% else %}
+                    <option value="{{ faculty.id }}">{{ faculty.user.get_full_name }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    {% else %}
+        <select name="faculty_id" id="facultySelect" class="form-select" required>
+            <option value="">Select Trainer</option>
+            {% for faculty in faculties %}
+            
+                <option value="{{ faculty.id }}" {% if faculty.id|stringformat:'s' == selected_faculty_id|stringformat:'s' %}selected{% endif %}>
+                    {{ faculty.user.get_full_name }}
+                </option>
+            {% endfor %}
+        </select>
+    {% endif %}
+        </div>
+
+        <div class="col-md-4">
+            <label>Batch</label>
+            
+            {% if is_faculty %}
+        <input type="hidden" id="batchSelect" name="batch_id" value="{{ selected_batch_id }}">
+        <select class="form-select" disabled>
+            {% for batch in batches %}
+                {% if batch.id|stringformat:"s" == selected_batch_id|stringformat:"s" %}
+                    <option selected>{{ batch.name }}</option>
+                {% else %}
+                    <option>{{ batch.name }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    {% else %}
+        <select name="batch_id" class="form-select" id="batchSelect" required>
+            <option value="">Select Batch</option>
+            {% for batch in batches %}
+                <option value="{{ batch.id }}" {% if batch.id|stringformat:'s' == selected_batch_id|stringformat:'s' %}selected{% endif %}>
+                    {{ batch.name }}
+                </option>
+            {% endfor %}
+        </select>
+    {% endif %}
+        </div>
+
+        <div class="col-md-4">
+            <label>Month</label> 
+            <select name="review_month" id="monthSelect" class="form-select" required>
+                <option value="">Select Month</option>
+                {% for month in months %}
+
+                    <option value="{{ month }}" {% if month == request.POST.review_month %}selected{% endif %}>{{ month }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <button type="submit" class="btn btn-primary">View Report</button>
+    </div>
+</form>
+
+    {% if review %}
+        <hr>
+        <h5 class="mt-4">Review for {{ review.batch.name }} ({{ review.review_month }})</h5>
+        <p><strong>Total Students:</strong> {{ review.total_students }}</p>
+        <p><strong>Start Date:</strong> {{ review.start_date }} | <strong>End Date:</strong> {{ review.end_date }}</p>
+
+        <h6 class="mt-4">Metrics</h6>
+        <table class="table table-bordered">
+            <thead>
+                <tr><th>Metric</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+                {% for metric in metrics %}
+            <tr>
+                <td>{{ metric.metric_name }}</td>
+                <td {% if metric.highlight %}style="color: red;"
+                {% endif %}>
+                    {{ metric.metric_value }}
+                </td>
+                
+            </tr>
+        {% endfor %}
+            </tbody>
+        </table>
+
+        <h6 class="mt-4">Milestone Activities</h6>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Activity</th><th>Day</th><th>Planned Date</th>
+                    <th>Completed Date</th><th>Status</th><th>Participation</th><th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for act in activities %}
+                    <tr>
+                        <td>{{ act.activity }}</td>
+                        <td>{{ act.day }}</td>
+                        <td>{{ act.planned_date }}</td>
+                        <td
+                    {% if act.completed_date and act.completed_date > act.planned_date %}
+                        style="color: red;"
+                    {% endif %}>
+                    {{ act.completed_date }}
+                </td>
+                        <td>{{ act.status }}</td>
+                        <td>{{ act.participation }}</td>
+                        <td>{{ act.remarks }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    <div class="text-end mt-4">
+        <a href="{% url 'export_review_pdf' faculty_id=request.POST.faculty_id batch_id=request.POST.batch_id review_month=request.POST.review_month %}" class="btn btn-outline-danger">
+    📄 Export to PDF
+</a>
+
+    <button class="btn btn-outline-secondary" onclick="window.print();">
+        
+        🖨️ Print This Report
+    </button>
+</div>
+
+    {% elif request.method == "POST" %}
+        <p class="text-danger">No review data found for the selected inputs.</p>
+    {% endif %}
+</div>
+
+<script>
+    const facultySelect = document.getElementById("facultySelect");
+    const batchSelect = document.getElementById("batchSelect");
+    const monthSelect = document.getElementById("monthSelect");
+    
+    const selectedMonth = "{{ request.POST.review_month|default:'' }}";
+
+
+
+    function loadBatches(facultyId) {
+        batchSelect.innerHTML = '<option value="">Loading...</option>';
+        fetch(`/ajax/get-batches/?faculty_id=${facultyId}`)
+            .then(response => response.json())
+            .then(data => {
+                batchSelect.innerHTML = '<option value="">Select Batch</option>';
+                data.forEach(batch => {
+                    const option = document.createElement("option");
+                    option.value = batch.id;
+                    option.textContent = batch.name;
+                    batchSelect.appendChild(option);
+                });
+            });
+    }
+
+    function loadMonths(facultyId, batchId) {
+    monthSelect.innerHTML = '<option value="">Loading...</option>';
+    if (facultyId && batchId) {
+        fetch(`/ajax/get-review-months/?faculty_id=${facultyId}&batch_id=${batchId}`)
+            .then(response => response.json())
+            .then(data => {
+                monthSelect.innerHTML = '<option value="">Select Month</option>';
+                data.forEach(month => {
+                    const option = document.createElement("option");
+                    option.value = month;
+                    option.textContent = month;
+                    if (month === selectedMonth) {
+                        option.selected = true;
+                    }
+                    monthSelect.appendChild(option);
+                });
+            });
+    } else {
+        monthSelect.innerHTML = '<option value="">Select Month</option>';
+    }
+}
+
+
+    // Trigger batch load on trainer change
+    facultySelect.addEventListener("change", function () {
+        const facultyId = this.value;
+        loadBatches(facultyId);
+        monthSelect.innerHTML = '<option value="">Select Month</option>';
+    });
+
+    // Trigger month load on batch change
+    batchSelect.addEventListener("change", function () {
+        const facultyId = facultySelect.value;
+        const batchId = this.value;
+        loadMonths(facultyId, batchId);
+    });
+
+    // Auto-load months if form was submitted
+    window.addEventListener('DOMContentLoaded', () => {
+        const facultyId = facultySelect.value;
+        const batchId = batchSelect.value;
+        if (facultyId && batchId) {
+            loadMonths(facultyId, batchId);
+        }
+    });
+</script>
+
+{% endblock %}

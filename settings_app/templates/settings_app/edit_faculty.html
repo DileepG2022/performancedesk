@@ -16,6 +16,7 @@
     {% endif %}
     <form method="post">
         {% csrf_token %}
+        
         <div class="form-group">
             {{ form.branch.label_tag }}
             {{ form.branch }}
@@ -23,6 +24,14 @@
         <div class="form-group">
             {{ form.courses.label_tag }}
             {{ form.courses }}
+        </div>
+        <div class="mb-3">
+            <label>Mobile No.</label>
+            {{ form.mobile_no }}
+        </div>
+        <div class="mb-3">
+            <label>WhatsApp No.</label>
+            {{ form.whatsapp_no }}
         </div>
         <button type="submit" class="btn btn-warning">Update Faculty</button>
         <a href="{% url 'faculty_list' %}" class="btn btn-secondary">Cancel</a>

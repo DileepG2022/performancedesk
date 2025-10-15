@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+
+    <h2 class="mb-4 text-center text-primary fw-bold">Placement Monthly Review Report</h2>
+
+    <!-- Form -->
+    <form method="get" action="">
+        <div class="row g-3 align-items-end">
+            <!-- Placement User -->
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Placement Team Member</label>
+                <select id="placement_user" name="placement_user" class="form-select" {% if is_placement %}disabled{% endif %}>
+                    <option value="">-- Select --</option>
+                    {% for pu in placement_users %}
+                        <option value="{{ pu.id }}" {% if selected_user and pu.id == selected_user.id %}selected{% endif %}>
+                            {{ pu.user.get_full_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Month Dropdown -->
+            <div class="col-md-4">
+                <label class="form-label fw-semibold">Review Month</label>
+                <select id="review_month" name="review_month" class="form-select">
+                    <option value="">-- Select Month --</option>
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-success w-100">Generate Report</button>
+            </div>
+        </div>
+    </form>
+
+    {% if selected_review %}
+    <hr class="my-4">
+
+    <div class="card shadow-sm border-0 mt-4">
+        <div class="card-header bg-primary text-white fw-bold d-flex justify-content-between align-items-center">
+            <span>Monthly Review – {{ selected_review.review_date|date:"F Y" }}</span>
+            <span class="badge bg-light text-primary">Report</span>
+        </div>
+        <div class="card-body">
+            <h5 class="fw-semibold">Remarks</h5>
+            <p class="text-muted">{{ selected_review.remarks|default:"No remarks provided." }}</p>
+
+            <h5 class="fw-semibold mt-4">Metrics</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Metric</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in metrics %}
+                        <tr>
+                            <td>{{ m.metric.metric_name }}</td>
+                            <td>{{ m.metric_value }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="text-center">No metrics found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <h5 class="fw-semibold mt-4">Placed Students</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Batch</th>
+                            <th>Placed Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in placed_students %}
+                        <tr>
+                            <td>{{ s.user.get_full_name }}</td>
+                            <td>{{ s.batch.name }}</td>
+                            <td>{{ s.placed_date|date:"d M Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="text-center">No students placed this month.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- JS to load months dynamically -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const userSelect = document.getElementById("placement_user");
+    const monthSelect = document.getElementById("review_month");
+
+    function loadMonths(userId, selectedMonthId=null) {
+        monthSelect.innerHTML = '<option value="">-- Select Month --</option>';
+        if (!userId) return;
+
+        fetch(`/get-placement-review-months/${userId}/`)
+            .then(res => res.json())
+            .then(data => {
+                data.months.forEach(m => {
+                    const opt = document.createElement("option");
+                    opt.value = m.id;
+                    opt.textContent = m.month;
+                    if (selectedMonthId && m.id == selectedMonthId) {
+                        opt.selected = true;  // pre-select the month
+                    }
+                    monthSelect.appendChild(opt);
+                });
+            });
+    }
+
+    // Determine user ID
+    let selectedUserId = "{{ selected_user.id }}";
+
+    // Determine selected month safely
+    {% if selected_review %}
+        let selectedMonthId = "{{ selected_review.id }}";
+    {% else %}
+        let selectedMonthId = null;
+    {% endif %}
+
+    // Auto-load months for Placement or if a review is already selected
+    if (selectedUserId) {
+        loadMonths(selectedUserId, selectedMonthId);
+    }
+
+    // If Manager changes the user dropdown
+    userSelect.addEventListener("change", function() {
+        loadMonths(this.value);
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center">Delete Placement Staff</h2>
+    <p class="text-center text-danger">
+        Are you sure you want to delete <strong>{{ placement.user.first_name }} {{ placement.user.last_name }}</strong> ({{ placement.user.username }})?
+    </p>
+    <form method="post" class="text-center">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+        <a href="{% url 'placement_list' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

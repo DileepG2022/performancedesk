@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+
+    <h2 class="mb-4 text-center text-primary fw-bold">Placement All Months Review Report</h2>
+
+    <!-- Selection Form -->
+    <form method="get" action="">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Placement Team Member</label>
+                <select id="placement_user" name="placement_user" class="form-select" {% if is_placement %}disabled{% endif %}>
+                    <option value="">-- Select --</option>
+                    {% for pu in placement_users %}
+                        <option value="{{ pu.id }}" {% if selected_user and pu.id == selected_user.id %}selected{% endif %}>
+                            {{ pu.user.get_full_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <button type="submit" class="btn btn-success w-100">View Report</button>
+            </div>
+        </div>
+    </form>
+
+    {% if selected_user %}
+    <hr class="my-5">
+
+    <h4 class="mb-4 text-center">All Months Review – <span class="text-primary">{{ selected_user.user.get_full_name }}</span></h4>
+
+    {% if reviews %}
+    <div class="accordion" id="reviewAccordion">
+        {% for review in reviews %}
+        <div class="accordion-item mb-3 shadow-sm rounded">
+            <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                <button class="accordion-button collapsed bg-primary text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="false" aria-controls="collapse{{ forloop.counter }}">
+                    {{ review.review_date|date:"F Y" }}
+                </button>
+            </h2>
+            <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#reviewAccordion">
+                <div class="accordion-body">
+                    
+                    <!-- Remarks -->
+                    <h6 class="fw-semibold">Remarks</h6>
+                    <p class="text-muted">{{ review.remarks|default:"No remarks provided." }}</p>
+
+                    <!-- Metrics -->
+                    <h6 class="fw-semibold mt-3">Metrics</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Metric</th>
+                                    <th>Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in review.placementmonthlymetric_set.all %}
+                                <tr>
+                                    <td>{{ m.metric.metric_name }}</td>
+                                    <td>{{ m.metric_value }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="2" class="text-center">No metrics found.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Placed Students -->
+                    <h6 class="fw-semibold mt-3">Placed Students</h6>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Batch</th>
+                                    <th>Placed Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in review.placed_students %}
+                                <tr>
+                                    <td>{{ s.user.get_full_name }}</td>
+                                    <td>{{ s.batch.name }}</td>
+                                    <td>{{ s.placed_date|date:"d M Y" }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-center">No students placed this month.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info mt-4 text-center" role="alert">
+        No reviews found for this user.
+    </div>
+    {% endif %}
+    {% endif %}
+
+</div>
+
+<style>
+/* Optional extra styling */
+.accordion-button {
+    font-size: 1.05rem;
+}
+.accordion-body h6 {
+    font-size: 0.95rem;
+}
+@media (max-width: 576px) {
+    .accordion-button {
+        font-size: 0.95rem;
+    }
+    .table {
+        font-size: 0.9rem;
+    }
+}
+</style>
+
+{% endblock %}

@@ -4,7 +4,45 @@
     <h2 class="text-center mb-4">Batch List</h2>
     
     <a href="{% url 'add_batch' %}" class="btn btn-primary mb-3">Add New Batch</a>
-
+    <form method="get" class="row g-3 mb-4">
+    <div class="col-md-2">
+        <input type="text" name="name" placeholder="Batch Name" value="{{ filters.name }}" class="form-control">
+    </div>
+    <div class="col-md-2">
+        <select name="branch" class="form-select">
+            <option value="">All Branches</option>
+            {% for branch in branches %}
+                <option value="{{ branch.id }}" {% if filters.branch_id == branch.id|stringformat:'s' %}selected{% endif %}>{{ branch.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select name="course" class="form-select">
+            <option value="">All Courses</option>
+            {% for course in courses %}
+                <option value="{{ course.id }}" {% if filters.course_id == course.id|stringformat:'s' %}selected{% endif %}>{{ course.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select name="faculty" class="form-select">
+            <option value="">All Faculty</option>
+            {% for f in faculties %}
+                <option value="{{ f.id }}" {% if filters.faculty_id == f.id|stringformat:'s' %}selected{% endif %}>{{ f.user.get_full_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select name="completed" class="form-select">
+            <option value="">Completed?</option>
+            <option value="yes" {% if filters.completed == 'yes' %}selected{% endif %}>Yes</option>
+            <option value="no" {% if filters.completed == 'no' %}selected{% endif %}>No</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Search</button>
+    </div>
+</form>
     <div class="table-responsive">
         <table class="table table-bordered table-striped">
             <thead class="thead-dark">
@@ -13,8 +51,34 @@
                     <th>Branch</th>
                     <th>Course</th>
                     <th>Faculty</th>
-                    <th>Start Date</th>   
-                    <th>End Date</th>
+                    <th>
+  <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort={{ next_sort_start }}">
+    Start Date
+    {% if sort == 'start_date' %}
+      <i class="bi bi-caret-up-fill"></i>
+    {% elif sort == '-start_date' %}
+      <i class="bi bi-caret-down-fill"></i>
+    {% else %}
+      <i class="bi bi-arrow-down-up"></i>
+    {% endif %}
+  </a>
+</th>
+<th>
+  <a href="?{{ base_qs }}{% if base_qs %}&{% endif %}sort={{ next_sort_end }}">
+    End Date
+    {% if sort == 'end_date' %}
+      <i class="bi bi-caret-up-fill"></i>
+    {% elif sort == '-end_date' %}
+      <i class="bi bi-caret-down-fill"></i>
+    {% else %}
+      <i class="bi bi-arrow-down-up"></i>
+    {% endif %}
+  </a>
+</th>
+
+
+
+                    <th>Total students</th>
                     <th>Completed</th>
                     <th>Actions</th>
                 </tr>
@@ -40,10 +104,13 @@
                             -
                         {% endif %}
                     </td>
+                    <td>{{ batch.total_students }}</td>
                     <td>{{ batch.completed|yesno:"Yes,No" }}</td>
                     <td>
                         <a href="{% url 'edit_batch' batch.id %}" class="btn btn-warning btn-sm">Edit</a>
                         <a href="{% url 'delete_batch' batch.id %}" class="btn btn-danger btn-sm">Delete</a>
+                        <a href="{% url 'batch_activities' batch.id %}" class="btn btn-info btn-sm">Activities</a>
+                        <a href="{% url 'student_list' batch.id %}" class="btn btn-success btn-sm">Students</a>
                     </td>
                 </tr>
                 {% empty %}
@@ -53,6 +120,28 @@
                 {% endfor %}
             </tbody>
         </table>
+        <nav aria-label="Page navigation">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?{{ qs_keep }}{% if qs_keep %}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+      </li>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+        <a class="page-link" href="?{{ qs_keep }}{% if qs_keep %}&{% endif %}page={{ num }}">{{ num }}</a>
+      </li>
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?{{ qs_keep }}{% if qs_keep %}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
+
     </div>
 </div>
 {% endblock %}

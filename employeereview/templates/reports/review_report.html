@@ -1,0 +1,116 @@
+{% load static %}
+{% load custom_filters %}
+
+<div class="container py-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <!-- Header -->
+        <div class="card-header bg-dark text-white rounded-top-4">
+            <h4 class="mb-0">Trainer Review Report</h4>
+            <small>{{ review.user.user.get_full_name }} | Batch: {{ review.batch.name }}</small>
+        </div>
+
+        <div class="card-body">
+            <!-- Batch & Review Info -->
+            <div class="row mb-4 text-center text-md-start">
+                <div class="col-md-3 mb-2"><strong>Start Date:</strong> {{ review.start_date|date:"F d, Y" }}</div>
+                <div class="col-md-3 mb-2"><strong>End Date:</strong> {{ review.end_date|date:"F d, Y" }}</div>
+                <div class="col-md-3 mb-2"><strong>Total Students:</strong> {{ review.total_students }}</div>
+                <div class="col-md-3 mb-2"><strong>Review Month:</strong> {{ review.review_date|date:"F Y" }}</div>
+            </div>
+
+            <!-- Remarks -->
+            <div class="mb-4 p-3 bg-light rounded">
+                <strong>Remarks:</strong> {{ review.remarks|default:"-" }}
+            </div>
+
+            <!-- Metrics -->
+            <h5 class="fw-bold mb-3">Metrics</h5>
+            <div class="row mb-4">
+                {% for metric in metrics %}
+                    <div class="col-md-4 mb-3">
+                        <div class="card shadow-sm text-center border-0 p-3 h-100">
+                            <h6 class="card-title">{{ metric.metric.metric_name }}</h6>
+                            <span class="badge bg-primary rounded-pill fs-6">{{ metric.metric_value }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Student Activity Table -->
+            <h5 class="fw-bold mb-3">Student Activities</h5>
+            <div class="table-responsive shadow-sm rounded-3" style="max-height: 500px; overflow-y: auto;">
+                <table class="table table-bordered table-hover align-middle text-center mb-0">
+                    <thead class="table-dark position-sticky top-0" style="z-index: 10;">
+                        <tr>
+                            <th class="text-start">Student</th>
+                            {% for act in batch_activities %}
+                                <th>
+                                    {{ act.activity }}<br>
+                                    <small class="text-light">Planned: {{ act.planned_date|date:"F d, Y" }}</small>
+                                </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                            <tr class="{% cycle 'table-light' 'table-white' %}">
+                                <td class="text-start"><strong>{{ student.user.get_full_name }}</strong></td>
+                                {% for act in batch_activities %}
+                                    {% with completion_map|get_item:student.id as student_activities %}
+                                        {% with student_activities|get_item:act.id as completed_date %}
+                                            <td>
+                                                {% if completed_date %}
+                                                    {% if completed_date > act.planned_date %}
+                                                        <span class="text-danger fw-bold">{{ completed_date|date:"F d, Y" }}</span>
+                                                    {% else %}
+                                                        <span>{{ completed_date|date:"F d, Y" }}</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-secondary">-</span>
+                                                {% endif %}
+                                            </td>
+                                        {% endwith %}
+                                    {% endwith %}
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Table row hover */
+.table-hover tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Sticky header styling */
+thead th {
+    position: sticky;
+    top: 0;
+    background-color: #343a40;
+    color: #fff;
+    z-index: 5;
+}
+
+/* Alternate row colors */
+.table-light {
+    background-color: #f8f9fa;
+}
+.table-white {
+    background-color: #ffffff;
+}
+
+/* Badge styling */
+.badge {
+    font-size: 0.95rem;
+}
+
+/* Card title font-weight */
+.card-title {
+    font-weight: 600;
+}
+</style>
